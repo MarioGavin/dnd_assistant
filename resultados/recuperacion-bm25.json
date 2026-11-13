@@ -1,0 +1,202 @@
+{
+ "config": {
+  "modo": "solo_recuperacion",
+  "embeddings": null,
+  "candidatos_por_lista": 20,
+  "rrf": 60,
+  "fecha": "2026-11-13T15:10:34",
+  "casos": "casos_prueba.json"
+ },
+ "resumen": {
+  "lexica@5": "4/12",
+  "lexica@10": "6/12"
+ },
+ "casos": [
+  {
+   "id": "N02",
+   "tipo": "normal",
+   "grupos": [
+    {
+     "fuente": "Caídas [peligro] p. 197",
+     "vectorial": null,
+     "lexica": 99,
+     "combinada": null
+    }
+   ],
+   "obsoleta_en_10": false
+  },
+  {
+   "id": "N03",
+   "tipo": "normal",
+   "grupos": [
+    {
+     "fuente": "Subir de nivel p. 26",
+     "vectorial": null,
+     "lexica": 1,
+     "combinada": null
+    }
+   ],
+   "obsoleta_en_10": false
+  },
+  {
+   "id": "N04",
+   "tipo": "normal",
+   "grupos": [
+    {
+     "fuente": "Rellena los números p. 24 | Tiradas de salvación p. 117",
+     "vectorial": null,
+     "lexica": 99,
+     "combinada": null
+    },
+    {
+     "fuente": "Progresión de niveles p. 25 | Tabla: Rasgos de clérigo p. 47",
+     "vectorial": null,
+     "lexica": 99,
+     "combinada": null
+    }
+   ],
+   "obsoleta_en_10": false
+  },
+  {
+   "id": "N05",
+   "tipo": "normal",
+   "grupos": [
+    {
+     "fuente": "Concentración p. 198",
+     "vectorial": null,
+     "lexica": 2,
+     "combinada": null
+    }
+   ],
+   "obsoleta_en_10": false
+  },
+  {
+   "id": "N08",
+   "tipo": "normal",
+   "grupos": [
+    {
+     "fuente": "Rasgos de clase de mago p. 71",
+     "vectorial": null,
+     "lexica": 99,
+     "combinada": null
+    },
+    {
+     "fuente": "Bola de fuego p. 125",
+     "vectorial": null,
+     "lexica": 7,
+     "combinada": null
+    }
+   ],
+   "obsoleta_en_10": false
+  },
+  {
+   "id": "L01",
+   "tipo": "limite",
+   "grupos": [
+    {
+     "fuente": "Cansancio [estado] p. 197",
+     "vectorial": null,
+     "lexica": 1,
+     "combinada": null
+    }
+   ],
+   "obsoleta_en_10": true
+  },
+  {
+   "id": "L02",
+   "tipo": "limite",
+   "grupos": [
+    {
+     "fuente": "Cansancio [estado] p. 197",
+     "vectorial": null,
+     "lexica": 99,
+     "combinada": null
+    }
+   ],
+   "obsoleta_en_10": true
+  },
+  {
+   "id": "L03",
+   "tipo": "limite",
+   "grupos": [
+    {
+     "fuente": "Rellena los números p. 24",
+     "vectorial": null,
+     "lexica": 99,
+     "combinada": null
+    },
+    {
+     "fuente": "Cansancio [estado] p. 197",
+     "vectorial": null,
+     "lexica": 15,
+     "combinada": null
+    },
+    {
+     "fuente": "Progresión de niveles p. 25 | Rasgos de clase de mago p. 71",
+     "vectorial": null,
+     "lexica": 99,
+     "combinada": null
+    }
+   ],
+   "obsoleta_en_10": true
+  },
+  {
+   "id": "L04",
+   "tipo": "limite",
+   "grupos": [
+    {
+     "fuente": "Iniciativa p. 14 | Sorpresa p. 208",
+     "vectorial": null,
+     "lexica": 8,
+     "combinada": null
+    }
+   ],
+   "obsoleta_en_10": true
+  },
+  {
+   "id": "L05",
+   "tipo": "limite",
+   "grupos": [
+    {
+     "fuente": "Un conjuro por cada espacio de conjuro y turno p. 115",
+     "vectorial": null,
+     "lexica": 11,
+     "combinada": null
+    }
+   ],
+   "obsoleta_en_10": false
+  },
+  {
+   "id": "L08",
+   "tipo": "limite",
+   "grupos": [
+    {
+     "fuente": "Ataque sin armas p. 196",
+     "vectorial": null,
+     "lexica": 8,
+     "combinada": null
+    }
+   ],
+   "obsoleta_en_10": true
+  },
+  {
+   "id": "L09",
+   "tipo": "limite",
+   "grupos": [
+    {
+     "fuente": "Paso 2: definir tu presupuesto de PX p. 221",
+     "vectorial": null,
+     "lexica": 1,
+     "combinada": null
+    },
+    {
+     "fuente": "Paso 3: gastar el presupuesto p. 222",
+     "vectorial": null,
+     "lexica": 2,
+     "combinada": null
+    }
+   ],
+   "obsoleta_en_10": false
+  }
+ ]
+}

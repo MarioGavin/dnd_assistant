@@ -4,3 +4,4 @@ __pycache__/
 .pytest_cache/
 # Los PDF del SRD no se suben: se descargan (ver README)
 *.pdf
+corpus/indices/
