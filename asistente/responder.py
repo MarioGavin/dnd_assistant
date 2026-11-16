@@ -125,7 +125,7 @@ def responder(pregunta, modelo=MODELO, k=K, busqueda="combinada", vectores=False
 
     inicio = time.time()
     r = anthropic.Anthropic().messages.create(
-        model=modelo, max_tokens=1000, temperature=0, system=SISTEMA,
+        model=modelo, max_tokens=1000, system=SISTEMA,
         messages=[{"role": "user", "content": mensaje}])
     segundos = time.time() - inicio
 
