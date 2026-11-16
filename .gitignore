@@ -5,3 +5,4 @@ __pycache__/
 # Los PDF del SRD no se suben: se descargan (ver README)
 *.pdf
 corpus/indices/
+*.zip

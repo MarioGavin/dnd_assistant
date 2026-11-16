@@ -57,6 +57,7 @@ class Buscador:
         if vectorial:
             from sentence_transformers import SentenceTransformer
             self.codificador = SentenceTransformer(modelo, device=dispositivo)
+            self.codificador.max_seq_length = 512      # los fragmentos rara vez pasan de 512 tokens
             self.vectores = self._vectores()
 
     # ---------------------------------------------------------------- índice vectorial

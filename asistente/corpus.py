@@ -1,4 +1,4 @@
-"""Corpus: del PDF del SRD a fragmentos citables.
+r"""Corpus: del PDF del SRD a fragmentos citables.
 
 Dos pasos:
   1. pdf_a_markdown(): lee el PDF con PyMuPDF y reconoce los títulos por su letra
