@@ -106,24 +106,20 @@ def montar_contexto(pregunta, usados):
 _buscador = None
 
 
-def buscador():
-    """Crea el buscador una sola vez. Usa embeddings si sentence-transformers está
-    instalado; si no, solo BM25."""
+def buscador(vectores=False):
+    """Crea el buscador una sola vez. Por defecto solo BM25: la búsqueda por significado
+    calcula los vectores del corpus y, sin GPU, eso tarda horas."""
     global _buscador
     if _buscador is None:
         from asistente.busqueda import Buscador
-        try:
-            import sentence_transformers  # noqa: F401
-            _buscador = Buscador(vectorial=True)
-        except ImportError:
-            _buscador = Buscador(vectorial=False)
+        _buscador = Buscador(vectorial=vectores)
     return _buscador
 
 
-def responder(pregunta, modelo=MODELO, k=K, busqueda="combinada"):
+def responder(pregunta, modelo=MODELO, k=K, busqueda="combinada", vectores=False):
     import anthropic
     cargar_clave()
-    b = buscador()
+    b = buscador(vectores)
     usados = emparejar(b.buscar(pregunta, busqueda=busqueda, k=k), b.fragmentos)
     mensaje = montar_contexto(pregunta, usados)
 
@@ -147,9 +143,13 @@ def responder(pregunta, modelo=MODELO, k=K, busqueda="combinada"):
 
 
 if __name__ == "__main__":
-    if len(sys.argv) < 2:
-        sys.exit('Uso: python -m asistente.responder "tu pregunta"')
-    r = responder(" ".join(sys.argv[1:]))
+    import argparse
+    ap = argparse.ArgumentParser(description="Responde una consulta de reglas citando el SRD.")
+    ap.add_argument("pregunta")
+    ap.add_argument("--vectores", action="store_true", help="búsqueda combinada con embeddings (mejor con GPU)")
+    ap.add_argument("--modelo", default=MODELO)
+    args = ap.parse_args()
+    r = responder(args.pregunta, modelo=args.modelo, vectores=args.vectores)
     print(r["respuesta"], "\n\nFragmentos que recibió el modelo:")
     for f in r["fragmentos"]:
         print(f"  [{f['n']}] {f['cita']}")
