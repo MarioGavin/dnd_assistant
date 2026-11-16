@@ -5,7 +5,7 @@ Estado del prototipo y lo que se sabe que todavía falla o falta.
 ## Funciona
 
 - Corpus: SRD 5.2.1 ES (vigente) y SRD 5.1 ES (obsoleto) convertidos de PDF a markdown y troceados por apartados, con documento, ruta y página. 33 tests pasan.
-- Consulta de principio a fin: pregunta → búsqueda → contexto con los fragmentos numerados → Claude Haiku 5.5 → respuesta con cita.
+- Consulta de principio a fin: pregunta → búsqueda → contexto con los fragmentos numerados → Claude Haiku 5.5 → respuesta con cita. Probado con 3 consultas: el contemplador se abstiene correctamente y la sorpresa da la regla de 2024 y avisa del cambio de 2014 (unos 0,001 $ y 3-5 s por consulta).
 - Conjunto de prueba: 20 casos (8 normales, 9 límite, 3 que deben fallar), 6 de ellos fichas de personaje.
 - Evaluación de la recuperación por apartado (recall@5 y @10), sin coste.
 
@@ -23,3 +23,7 @@ Estado del prototipo y lo que se sabe que todavía falla o falta.
 | 8 | Algunas cabeceras de tabla de varias líneas quedan desordenadas al convertir el PDF (las filas de datos son correctas) | `corpus/srd521.md`, p. 71 | Revisión manual por muestreo (`corpus/muestra_revision.md`) |
 | 9 | Los datos personales de las fichas (nombre, correo, ID) se enviarían al modelo | — | Seudonimización local antes de la llamada |
 | 10 | La resistencia a la inyección de instrucciones no está medida | — | Casos F03 y variantes |
+| 11 | Respuesta cortada: en la consulta del cansancio la salida llega a 1000 tokens y el texto termina a medias («Cambio respecto a 2014: en a»). El texto visible es corto, así que el límite se consume antes de escribir la respuesta | `resultados/cuaderno_ejecutado_avance.ipynb`, sección 3 | Subir `max_tokens`, registrar `stop_reason` y marcar como fallo toda respuesta cortada |
+| 12 | El modelo no relaciona «ataque» con «prueba con d20»: no recupera el apartado que define las pruebas con d20 y dice que no puede confirmar que el ataque esté incluido | ídem | Mejorar la recuperación (fallos 1-3); caso L01 |
+| 13 | La frase de abstención aparece dentro de respuestas correctas («No está en el SRD 5.2.1 que los bandidos pierdan su primer turno. Lo que sí dice…»): un detector que solo busque la frase lo contaría como abstención | ídem, consulta de la sorpresa | Instrucción: la frase solo cuando no hay respuesta; el detector comprueba que la respuesta empieza por ella |
+| 14 | La búsqueda trae mucho ruido del SRD 5.1 (6 de 10 fragmentos en la consulta de la sorpresa) | ídem | Limitar los fragmentos de 2014 a los que tengan pareja en 2024 |
