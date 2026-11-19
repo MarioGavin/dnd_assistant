@@ -88,7 +88,7 @@ def citas(texto):
 # ---------------------------------------------------------------- recuperación
 
 def evaluar_recuperacion(buscador, casos, candidatos=50):
-    from asistente.responder import CANDIDATOS, K, emparejar, seleccionar
+    from asistente.responder import CANDIDATOS, contexto as montar
     filas = []
     for caso in casos:
         if caso.get("modo") != "consulta" or not caso.get("fuentes"):
@@ -96,8 +96,7 @@ def evaluar_recuperacion(buscador, casos, candidatos=50):
         sig, pal = buscador.listas(caso["pregunta"], candidatos)
         comb = buscador.ordenar(caso["pregunta"], "combinada", candidatos) if sig else None
         orden = comb or pal
-        contexto = emparejar(seleccionar([buscador.fragmentos[i] for i in orden[:CANDIDATOS]],
-                                         buscador.fragmentos, K), buscador.fragmentos)
+        contexto = montar(buscador.buscar(caso["pregunta"], k=CANDIDATOS), buscador.fragmentos)
         fila = {"id": caso["id"], "tipo": caso["tipo"], "grupos": []}
         for grupo in caso["fuentes"]:
             fila["grupos"].append({
@@ -187,7 +186,8 @@ def puntuar_ficha(caso, r):
     return p
 
 
-def una_ejecucion(casos, modelo, max_obsoletos, por_id, fichas_con_modelo=True, reformular=False, enrutar=False):
+def una_ejecucion(casos, modelo, max_obsoletos, por_id, fichas_con_modelo=True, reformular=False, enrutar=False,
+                  tablas=True):
     from asistente import responder as R
     from asistente.fichas import validar
     filas = []
@@ -195,7 +195,7 @@ def una_ejecucion(casos, modelo, max_obsoletos, por_id, fichas_con_modelo=True, 
         try:
             if caso["modo"] == "consulta":
                 r = R.responder(caso["pregunta"], modelo=modelo, max_obsoletos=max_obsoletos,
-                                reformular_pregunta=reformular, enrutar=enrutar)
+                                reformular_pregunta=reformular, enrutar=enrutar, tablas=tablas)
             elif fichas_con_modelo:
                 r = R.responder_ficha(caso["ficha"], modelo=modelo)
             else:
@@ -267,7 +267,8 @@ def evaluar_completo(args, casos):
     import anthropic
     por_id = {f["id"]: f for f in cargar()}
     etiqueta = args.etiqueta or (ETIQUETAS.get(args.modelo, args.modelo)
-                                 + "-reformular" * args.reformular + "-enrutar" * args.enrutar)
+                                 + "-reformular" * args.reformular + "-enrutar" * args.enrutar
+                                 + "-sin-tablas" * args.sin_tablas)
     config = {
         "etiqueta": etiqueta, "modelo": args.modelo, "k": R.K, "candidatos": R.CANDIDATOS,
         "max_obsoletos": args.max_obsoletos, "busqueda": "BM25 + raíces + sinónimos" if (R.buscador().raices and R.buscador().sinonimos) else "BM25", "max_tokens": R.MAX_TOKENS,
@@ -276,6 +277,7 @@ def evaluar_completo(args, casos):
         "tablas_srd": hashlib.sha1(json.dumps(TABLAS, sort_keys=True).encode("utf-8")).hexdigest()[:10],
         "fichas_con_modelo": not args.fichas_sin_modelo, "sdk_anthropic": anthropic.__version__,
         "reformular": args.reformular, "enrutar": R.MODELO_ENRUTADO if args.enrutar else None,
+        "tablas": not args.sin_tablas,
         "casos": Path(args.casos).name,
     }
     RESULTADOS.mkdir(exist_ok=True)
@@ -283,7 +285,7 @@ def evaluar_completo(args, casos):
     for rep in range(1, args.repeticiones + 1):
         print(f"\n=== {etiqueta} · ejecución {rep} de {args.repeticiones}")
         filas = una_ejecucion(casos, args.modelo, args.max_obsoletos, por_id, not args.fichas_sin_modelo,
-                              args.reformular, args.enrutar)
+                              args.reformular, args.enrutar, not args.sin_tablas)
         res = {**config, "repeticion": rep, "fecha": datetime.now().isoformat(timespec="seconds"), **resumir(filas)}
         resumenes.append(res)
         nombre = RESULTADOS / f"{etiqueta}-r{rep}.json"
@@ -351,6 +353,7 @@ def main():
     ap.add_argument("--tabla", action="store_true", help="tabla comparativa de resultados/ (sin llamadas)")
     ap.add_argument("--reformular", action="store_true", help="añadir términos del SRD a la pregunta antes de buscar")
     ap.add_argument("--enrutar", action="store_true", help="Sonnet solo para las consultas con un fragmento de 2014")
+    ap.add_argument("--sin-tablas", action="store_true", help="sin añadir tablas al contexto (alternativa medida)")
     args = ap.parse_args()
 
     if args.tabla:

@@ -137,3 +137,14 @@ def test_enrutar(falso, pregunta):
     hay_2014 = any("OBSOLETO" in f["cita"] for f in r["fragmentos"])
     assert r["enrutada"] == hay_2014
     assert falso.peticiones[-1]["model"] == (R.MODELO_ENRUTADO if hay_2014 else R.MODELO)
+
+
+def test_tablas_en_el_contexto():
+    subir = next(f for f in FRAGMENTOS if f["vigente"] and f["ruta"].endswith("Progresión de niveles › Subir de nivel"))
+    usados = R.anadir_tablas([subir], FRAGMENTOS)
+    rutas = [f["ruta"] for f in usados]
+    assert rutas[0] == subir["ruta"]
+    assert any(r.endswith("Tabla: Puntos de golpe establecidos por clase") for r in rutas)   # su tabla
+    for nombre in R.TABLAS_FIJAS:                                                             # y las fijas
+        assert sum(r.endswith(nombre) for r in rutas) == 1
+    assert len(R.anadir_tablas(usados, FRAGMENTOS)) == len(usados)                           # sin duplicados

@@ -5,6 +5,8 @@ Consulta:
   2. seleccionar()     los k primeros vigentes; del SRD 5.1 (2014) solo los que tienen un
                        apartado con el mismo título en el SRD 5.2.1, y como mucho MAX_OBSOLETOS.
   3. emparejar()       delante de cada fragmento de 2014 va su apartado de 2024.
+     anadir_tablas()   detrás de cada apartado, sus tablas; al final, las tablas de
+                       modificadores y de bonificador por competencia (TABLAS_FIJAS).
   4. montar_contexto() fragmentos numerados [1], [2]… entre <documentos>.
   5. llamar()          API de Anthropic; se guardan stop_reason y los tipos de bloque.
 
@@ -35,6 +37,9 @@ K = 10
 CANDIDATOS = 20         # candidatos de la búsqueda entre los que se eligen los k (= busqueda.CANDIDATOS)
 MAX_OBSOLETOS = 1        # fragmentos del SRD 5.1 como máximo (fallo 14; ver --max-obsoletos)
 MAX_TOKENS = 4000        # con 1000 se cortaban respuestas (fallo 11)
+TABLAS = True            # añadir las tablas de cada apartado y las TABLAS_FIJAS (ver --sin-tablas)
+TABLAS_FIJAS = ("Tabla: Puntuaciones de característica y modificadores",   # SRD 5.2.1, p. 23
+                "Tabla: Progreso de los personajes")                        # SRD 5.2.1, p. 25
 VERSION_PROMPT = "v2"    # v1: avance del 15 nov
 NO_ESTA = "No está en el SRD 5.2.1."
 AVISO_2014 = "Cambio respecto a 2014:"
@@ -166,6 +171,31 @@ def emparejar(usados, fragmentos):
     return salida
 
 
+def anadir_tablas(usados, fragmentos):
+    """Detrás de cada apartado, las tablas que cuelgan de él (el corpus guarda cada tabla
+    como fragmento propio y la búsqueda a veces trae el texto sin su tabla). Al final, las
+    dos tablas que necesita casi cualquier cuenta: modificadores y bonificador por competencia."""
+    salida = []
+    for f in usados:
+        if f not in salida:
+            salida.append(f)
+        for g in fragmentos:
+            if (g["vigente"] == f["vigente"] and g["ruta"].startswith(f["ruta"] + " › Tabla")
+                    and abs(g["pagina"] - f["pagina"]) <= 1 and g not in salida):
+                salida.append(g)
+    for nombre in TABLAS_FIJAS:
+        g = next(g for g in fragmentos if g["vigente"] and g["ruta"].endswith(nombre))
+        if g not in salida:
+            salida.append(g)
+    return salida
+
+
+def contexto(candidatos, fragmentos, k=K, max_obsoletos=MAX_OBSOLETOS, tablas=TABLAS):
+    """Fragmentos que recibe el modelo, a partir de la lista ordenada de la búsqueda."""
+    usados = emparejar(seleccionar(candidatos, fragmentos, k, max_obsoletos), fragmentos)
+    return anadir_tablas(usados, fragmentos) if tablas else usados
+
+
 def montar_contexto(pregunta, usados):
     bloques = [f"[{i}] ({cabecera(f)})\n{f['texto']}" for i, f in enumerate(usados, 1)]
     return "<documentos>\n" + "\n\n".join(bloques) + "\n</documentos>\n\nPregunta: " + pregunta
@@ -221,12 +251,13 @@ def llamar(sistema, mensaje, modelo=MODELO, max_tokens=MAX_TOKENS):
     }
 
 
-def preparar(pregunta, k=K, busqueda="combinada", vectores=False, max_obsoletos=MAX_OBSOLETOS, consulta=None):
+def preparar(pregunta, k=K, busqueda="combinada", vectores=False, max_obsoletos=MAX_OBSOLETOS, consulta=None,
+             tablas=TABLAS):
     """consulta: texto con el que se busca (por defecto, la pregunta). Al modelo le llega
     siempre la pregunta original."""
     b = buscador(vectores)
     candidatos = b.buscar(consulta or pregunta, busqueda=busqueda, k=CANDIDATOS)
-    usados = emparejar(seleccionar(candidatos, b.fragmentos, k, max_obsoletos), b.fragmentos)
+    usados = contexto(candidatos, b.fragmentos, k, max_obsoletos, tablas)
     return usados, montar_contexto(pregunta, usados)
 
 
@@ -237,13 +268,13 @@ def reformular(pregunta):
 
 
 def responder(pregunta, modelo=MODELO, k=K, busqueda="combinada", vectores=False, max_obsoletos=MAX_OBSOLETOS,
-              reformular_pregunta=False, enrutar=False):
+              reformular_pregunta=False, enrutar=False, tablas=TABLAS):
     extra = None
     consulta = pregunta
     if reformular_pregunta:
         terminos, extra = reformular(pregunta)
         consulta = f"{pregunta} {terminos}"
-    usados, mensaje = preparar(pregunta, k, busqueda, vectores, max_obsoletos, consulta)
+    usados, mensaje = preparar(pregunta, k, busqueda, vectores, max_obsoletos, consulta, tablas)
     enrutada = enrutar and any(not f["vigente"] for f in usados)
     r = llamar(SISTEMA, mensaje, MODELO_ENRUTADO if enrutada else modelo)
     if extra:                                   # el coste de reformular cuenta en la consulta
