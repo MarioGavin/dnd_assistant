@@ -1,0 +1,17 @@
+{
+ "_nota": "Términos de 2014 → término del SRD 5.2.1 ES. Salen de las entradas [New Name] de la guía oficial converting-to-srd-5.2.1.pdf (página entre paréntesis), con el término en español tal como aparece en el corpus. No salen de los casos de prueba.",
+ "sinonimos": [
+  {"de": ["tirada de ataque", "tiradas de ataque", "prueba de caracteristica", "pruebas de caracteristica", "tirada de salvacion", "tiradas de salvacion"], "a": "prueba con d20", "guia": "D20 Test (p. 1)"},
+  {"de": ["raza", "razas"], "a": "especie", "guia": "Choose a Species, previously called race (p. 2)"},
+  {"de": ["usar un objeto"], "a": "utilizar", "guia": "Utilize Action (p. 2)"},
+  {"de": ["lanzar un conjuro"], "a": "accion de magia", "guia": "Magic Action (p. 2)"},
+  {"de": ["competencia con armaduras", "competencia con armadura"], "a": "entrenamiento con armaduras", "guia": "Armor Training (p. 9)"},
+  {"de": ["castigo divino"], "a": "castigo de paladin", "guia": "Paladin's Smite (p. 6)"},
+  {"de": ["escuela de evocacion"], "a": "evocador", "guia": "Evoker (p. 8)"},
+  {"de": ["inspiracion"], "a": "inspiracion heroica", "guia": "Heroic Inspiration (p. 11)"},
+  {"de": ["velocidad caminando"], "a": "velocidad", "guia": "Speed (p. 11)"},
+  {"de": ["comida y agua", "sed"], "a": "deshidratacion", "guia": "Dehydration (p. 11)"},
+  {"de": ["enfermedad", "enfermedades"], "a": "contagio", "guia": "Magical Contagions (p. 12)"},
+  {"de": ["locura"], "a": "miedo y estres mental", "guia": "Fear and Mental Stress (p. 12)"}
+ ]
+}

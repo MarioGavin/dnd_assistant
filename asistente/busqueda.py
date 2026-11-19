@@ -11,7 +11,11 @@ Uso:
     b = Buscador()                       # combinada (necesita sentence-transformers)
     b = Buscador(vectorial=False)        # solo BM25, sin modelo de embeddings
     b.buscar("¿Qué pasa con 2 niveles de cansancio?", k=10)
+
+Por defecto, BM25 con raíces (snowballstemmer: «caer» y «caídas» coinciden) y con los
+sinónimos de 2014 → 2024 de datos/sinonimos.json (guía oficial de conversión). Ver DECISIONES.md.
 """
+import json
 import hashlib
 import re
 import unicodedata
@@ -25,6 +29,8 @@ from asistente.corpus import RAIZ, cabecera, cargar
 MODELO_EMB = "Qwen/Qwen3-Embedding-0.6B"
 CANDIDATOS = 20          # puestos de cada lista que entran en la fusión
 RRF = 60                 # constante de la fusión por posición
+RAICES = True            # BM25 sobre raíces de las palabras
+SINONIMOS = True         # añadir a la pregunta los términos de 2024 (datos/sinonimos.json)
 
 # Cómo espera cada modelo las preguntas y los documentos.
 #   Qwen3-Embedding: instrucción en la pregunta (prompt_name="query"), documento tal cual.
@@ -37,11 +43,24 @@ FORMATO = {
 }
 
 
-def palabras(texto):
-    """Minúsculas, sin tildes, solo letras y números."""
+def palabras(texto, raices=False):
+    """Minúsculas, sin tildes, solo letras y números; con raices=True, cada palabra reducida
+    a su raíz («ataque», «atacar» → «ataqu», «atac»)."""
     texto = unicodedata.normalize("NFKD", texto.lower())
     texto = "".join(c for c in texto if not unicodedata.combining(c))
-    return re.findall(r"[a-z0-9]+(?:-[a-z0-9]+)*", texto)
+    lista = re.findall(r"[a-z0-9]+(?:-[a-z0-9]+)*", texto)
+    if raices:
+        import snowballstemmer
+        lista = snowballstemmer.stemmer("spanish").stemWords(lista)
+    return lista
+
+
+def expandir(pregunta):
+    """Añade a la pregunta el término de 2024 de cada término de 2014 que contenga."""
+    n = " ".join(palabras(pregunta))
+    tabla = json.load(open(RAIZ / "datos" / "sinonimos.json", encoding="utf-8"))["sinonimos"]
+    extra = [s["a"] for s in tabla if any(re.search(rf"\b{d}\b", n) for d in s["de"])]
+    return " ".join([pregunta] + extra)
 
 
 def texto_indexado(f):
@@ -49,9 +68,11 @@ def texto_indexado(f):
 
 
 class Buscador:
-    def __init__(self, fragmentos=None, vectorial=True, modelo=MODELO_EMB, dispositivo=None):
+    def __init__(self, fragmentos=None, vectorial=True, modelo=MODELO_EMB, dispositivo=None,
+                 raices=RAICES, sinonimos=SINONIMOS):
         self.fragmentos = fragmentos if fragmentos is not None else cargar()
-        self.bm25 = BM25Okapi([palabras(texto_indexado(f)) for f in self.fragmentos])
+        self.raices, self.sinonimos = raices, sinonimos
+        self.bm25 = BM25Okapi([palabras(texto_indexado(f), raices) for f in self.fragmentos])
         self.modelo = modelo if vectorial else None
         self.codificador, self.vectores = None, None
         if vectorial:
@@ -80,7 +101,8 @@ class Buscador:
     def listas(self, pregunta, candidatos=CANDIDATOS):
         """Índices de los fragmentos en cada búsqueda por separado:
         (por significado, por palabras). Sin modelo vectorial, la primera va vacía."""
-        por_palabras = list(np.argsort(-self.bm25.get_scores(palabras(pregunta)))[:candidatos])
+        consulta = expandir(pregunta) if self.sinonimos else pregunta
+        por_palabras = list(np.argsort(-self.bm25.get_scores(palabras(consulta, self.raices)))[:candidatos])
         if self.codificador is None:
             return [], por_palabras
         opciones = FORMATO.get(self.modelo, {"pregunta": {}})["pregunta"]
