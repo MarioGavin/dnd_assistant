@@ -26,3 +26,13 @@ def test_fuentes_existen(caso):
     fuentes = [f for grupo in caso.get("fuentes", []) for f in grupo] + caso.get("fuentes_obsoletas", [])
     for fuente in fuentes:
         assert any(coincide(f, fuente) for f in FRAGMENTOS), fuente
+
+
+CONTRASTE = json.load(open(RAIZ / "casos" / "consultas_contraste.json", encoding="utf-8"))
+
+
+@pytest.mark.parametrize("caso", CONTRASTE, ids=[c["id"] for c in CONTRASTE])
+def test_fuentes_de_contraste_existen(caso):
+    assert caso["id"] not in {c["id"] for c in CASOS}
+    for fuente in [f for grupo in caso["fuentes"] for f in grupo]:
+        assert any(coincide(f, fuente) for f in FRAGMENTOS), fuente

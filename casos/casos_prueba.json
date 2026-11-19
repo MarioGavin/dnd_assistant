@@ -35,7 +35,7 @@
     "tipo": "normal",
     "modo": "consulta",
     "pregunta": "¿Cuántos puntos de golpe gana un guerrero al subir de nivel si no tira el dado?",
-    "requiere": [["6"], ["Constitución", "Con"]],
+    "requiere": [["6"], ["Constitución", "modificador por Con"]],
     "fuentes": [[{"documento": "SRD 5.2.1 ES", "apartado": "Subir de nivel", "pagina": 26}]],
     "nota": "Tabla «Puntos de golpe establecidos por clase»: 6 + modificador por Con."
   },
