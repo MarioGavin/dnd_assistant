@@ -160,3 +160,17 @@ def test_tablas_del_apartado_padre():
     con_padre = R.anadir_tablas([hijo], FRAGMENTOS, padre=True)
     assert tabla(con_padre)
     assert len(R.anadir_tablas(con_padre, FRAGMENTOS, padre=True)) == len(con_padre)       # sin duplicados
+
+
+def test_contexto_amplio():
+    """--contexto-amplio busca entre AMPLIO["candidatos"] y da hasta AMPLIO["k"] fragmentos
+    (más sus parejas y tablas); sin la opción, todo queda como antes."""
+    b = R.buscador()
+    assert len(b.buscar("cansancio", busqueda="lexica", k=R.AMPLIO["candidatos"])) == R.AMPLIO["candidatos"]
+    assert b.buscar("cansancio", busqueda="lexica", k=R.CANDIDATOS) == b.buscar("cansancio", busqueda="lexica", k=60)[:R.CANDIDATOS]
+    pregunta = "¿Puede mi mago de nivel 3 preparar Bola de fuego?"
+    normal, _ = R.preparar(pregunta)
+    amplio, _ = R.preparar(pregunta, k=R.AMPLIO["k"], max_obsoletos=R.AMPLIO["max_obsoletos"],
+                           tablas_padre=True, candidatos=R.AMPLIO["candidatos"])
+    assert len(amplio) > len(normal)
+    assert sum(not f["vigente"] for f in amplio) <= R.AMPLIO["max_obsoletos"]

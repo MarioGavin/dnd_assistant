@@ -13,6 +13,7 @@ Consulta:
 
 Opciones medidas (desactivadas por defecto en las funciones; la línea de órdenes reformula):
   reformular  antes de buscar, un modelo barato añade a la pregunta los términos del SRD.
+  contexto_amplio  buscar entre más candidatos y dar más fragmentos (AMPLIO).
   tablas_padre  añadir también las tablas del apartado padre (fallo 24: «Tabla: Rasgos de mago»
               cuelga de «Rasgos de clase de mago», no de «Nivel 1: Lanzamiento de conjuros»).
   enrutar     Haiku por defecto y Sonnet solo si el contexto trae un fragmento de 2014.
@@ -42,6 +43,8 @@ MAX_OBSOLETOS = 1        # fragmentos del SRD 5.1 como máximo (fallo 14; ver --
 MAX_TOKENS = 4000        # con 1000 se cortaban respuestas (fallo 11)
 TABLAS = True            # añadir las tablas de cada apartado y las TABLAS_FIJAS (ver --sin-tablas)
 TABLAS_PADRE = False     # añadir también las tablas del apartado padre (ver --tablas-padre)
+# --contexto-amplio: medido en local el 20 nov, fuentes en el contexto 9 → 11/12 (casos y contraste), mensaje ×2
+AMPLIO = {"candidatos": 60, "k": 20, "max_obsoletos": 2, "tablas_padre": True}
 TABLAS_FIJAS = ("Tabla: Puntuaciones de característica y modificadores",   # SRD 5.2.1, p. 23
                 "Tabla: Progreso de los personajes")                        # SRD 5.2.1, p. 25
 VERSION_PROMPT = "v2"    # v1: avance del 15 nov
@@ -260,11 +263,11 @@ def llamar(sistema, mensaje, modelo=MODELO, max_tokens=MAX_TOKENS):
 
 
 def preparar(pregunta, k=K, busqueda="combinada", vectores=False, max_obsoletos=MAX_OBSOLETOS, consulta=None,
-             tablas=TABLAS, tablas_padre=TABLAS_PADRE):
+             tablas=TABLAS, tablas_padre=TABLAS_PADRE, candidatos=CANDIDATOS):
     """consulta: texto con el que se busca (por defecto, la pregunta). Al modelo le llega
     siempre la pregunta original."""
     b = buscador(vectores)
-    candidatos = b.buscar(consulta or pregunta, busqueda=busqueda, k=CANDIDATOS)
+    candidatos = b.buscar(consulta or pregunta, busqueda=busqueda, k=candidatos)
     usados = contexto(candidatos, b.fragmentos, k, max_obsoletos, tablas, tablas_padre)
     return usados, montar_contexto(pregunta, usados)
 
@@ -276,13 +279,18 @@ def reformular(pregunta):
 
 
 def responder(pregunta, modelo=MODELO, k=K, busqueda="combinada", vectores=False, max_obsoletos=MAX_OBSOLETOS,
-              reformular_pregunta=False, enrutar=False, tablas=TABLAS, tablas_padre=TABLAS_PADRE):
+              reformular_pregunta=False, enrutar=False, tablas=TABLAS, tablas_padre=TABLAS_PADRE,
+              contexto_amplio=False):
+    candidatos = CANDIDATOS
+    if contexto_amplio:
+        candidatos, k, max_obsoletos, tablas_padre = (AMPLIO[c] for c in ("candidatos", "k", "max_obsoletos", "tablas_padre"))
     extra = None
     consulta = pregunta
     if reformular_pregunta:
         terminos, extra = reformular(pregunta)
         consulta = f"{pregunta} {terminos}"
-    usados, mensaje = preparar(pregunta, k, busqueda, vectores, max_obsoletos, consulta, tablas, tablas_padre)
+    usados, mensaje = preparar(pregunta, k, busqueda, vectores, max_obsoletos, consulta, tablas, tablas_padre,
+                               candidatos)
     enrutada = enrutar and any(not f["vigente"] for f in usados)
     r = llamar(SISTEMA, mensaje, MODELO_ENRUTADO if enrutada else modelo)
     if extra:                                   # el coste de reformular cuenta en la consulta
@@ -348,6 +356,7 @@ if __name__ == "__main__":
     ap.add_argument("--sin-reformular", action="store_true",
                     help="buscar con la pregunta tal cual (por defecto se reformula: DECISIONES.md, fila 14)")
     ap.add_argument("--tablas-padre", action="store_true", help="añadir también las tablas del apartado padre")
+    ap.add_argument("--contexto-amplio", action="store_true", help=f"más candidatos y fragmentos: {AMPLIO}")
     ap.add_argument("--enrutar", action="store_true", help=f"usar {MODELO_ENRUTADO} si el contexto trae un fragmento de 2014")
     args = ap.parse_args()
     if args.pregunta.endswith(".json"):
@@ -355,7 +364,7 @@ if __name__ == "__main__":
     else:
         r = responder(args.pregunta, modelo=args.modelo, vectores=args.vectores,
                       reformular_pregunta=not args.sin_reformular, enrutar=args.enrutar,
-                      tablas_padre=args.tablas_padre)
+                      tablas_padre=args.tablas_padre, contexto_amplio=args.contexto_amplio)
         if r.get("consulta"):
             print("Búsqueda:", r["consulta"], "\n")
     print(r["respuesta"], "\n\nFragmentos que recibió el modelo:")

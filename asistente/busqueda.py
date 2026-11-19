@@ -124,4 +124,6 @@ class Buscador:
         return sorted(puntos, key=puntos.get, reverse=True)
 
     def buscar(self, pregunta, busqueda="combinada", k=10):
-        return [self.fragmentos[i] for i in self.ordenar(pregunta, busqueda)[:k]]
+        """Los k primeros. Con k > CANDIDATOS, cada lista aporta k candidatos (antes se
+        cortaba en CANDIDATOS aunque se pidieran más)."""
+        return [self.fragmentos[i] for i in self.ordenar(pregunta, busqueda, max(k, CANDIDATOS))[:k]]

@@ -87,8 +87,10 @@ def citas(texto):
 
 # ---------------------------------------------------------------- recuperación
 
-def evaluar_recuperacion(buscador, casos, candidatos=50, tablas_padre=False):
-    from asistente.responder import CANDIDATOS, contexto as montar
+def evaluar_recuperacion(buscador, casos, candidatos=50, tablas_padre=False, amplio=False):
+    from asistente.responder import AMPLIO, CANDIDATOS, K, MAX_OBSOLETOS, contexto as montar
+    n, k, mo = (AMPLIO["candidatos"], AMPLIO["k"], AMPLIO["max_obsoletos"]) if amplio else (CANDIDATOS, K, MAX_OBSOLETOS)
+    tablas_padre = tablas_padre or (amplio and AMPLIO["tablas_padre"])
     filas = []
     for caso in casos:
         if caso.get("modo") != "consulta" or not caso.get("fuentes"):
@@ -96,7 +98,7 @@ def evaluar_recuperacion(buscador, casos, candidatos=50, tablas_padre=False):
         sig, pal = buscador.listas(caso["pregunta"], candidatos)
         comb = buscador.ordenar(caso["pregunta"], "combinada", candidatos) if sig else None
         orden = comb or pal
-        contexto = montar(buscador.buscar(caso["pregunta"], k=CANDIDATOS), buscador.fragmentos,
+        contexto = montar(buscador.buscar(caso["pregunta"], k=n), buscador.fragmentos, k, mo,
                           tablas_padre=tablas_padre)
         fila = {"id": caso["id"], "tipo": caso["tipo"], "grupos": []}
         for grupo in caso["fuentes"]:
@@ -188,7 +190,7 @@ def puntuar_ficha(caso, r):
 
 
 def una_ejecucion(casos, modelo, max_obsoletos, por_id, fichas_con_modelo=True, reformular=False, enrutar=False,
-                  tablas=True, tablas_padre=False):
+                  tablas=True, tablas_padre=False, contexto_amplio=False):
     from asistente import responder as R
     from asistente.fichas import validar
     filas = []
@@ -197,7 +199,7 @@ def una_ejecucion(casos, modelo, max_obsoletos, por_id, fichas_con_modelo=True, 
             if caso["modo"] == "consulta":
                 r = R.responder(caso["pregunta"], modelo=modelo, max_obsoletos=max_obsoletos,
                                 reformular_pregunta=reformular, enrutar=enrutar, tablas=tablas,
-                                tablas_padre=tablas_padre)
+                                tablas_padre=tablas_padre, contexto_amplio=contexto_amplio)
             elif fichas_con_modelo:
                 r = R.responder_ficha(caso["ficha"], modelo=modelo)
             else:
@@ -270,7 +272,8 @@ def evaluar_completo(args, casos):
     por_id = {f["id"]: f for f in cargar()}
     etiqueta = args.etiqueta or (ETIQUETAS.get(args.modelo, args.modelo)
                                  + "-reformular" * args.reformular + "-enrutar" * args.enrutar
-                                 + "-sin-tablas" * args.sin_tablas + "-tablas-padre" * args.tablas_padre)
+                                 + "-sin-tablas" * args.sin_tablas + "-tablas-padre" * args.tablas_padre
+                                 + "-contexto-amplio" * args.contexto_amplio)
     config = {
         "etiqueta": etiqueta, "modelo": args.modelo, "k": R.K, "candidatos": R.CANDIDATOS,
         "max_obsoletos": args.max_obsoletos, "busqueda": "BM25 + raíces + sinónimos" if (R.buscador().raices and R.buscador().sinonimos) else "BM25", "max_tokens": R.MAX_TOKENS,
@@ -280,6 +283,7 @@ def evaluar_completo(args, casos):
         "fichas_con_modelo": not args.fichas_sin_modelo, "sdk_anthropic": anthropic.__version__,
         "reformular": args.reformular, "enrutar": R.MODELO_ENRUTADO if args.enrutar else None,
         "tablas": not args.sin_tablas, "tablas_padre": args.tablas_padre,
+        "contexto_amplio": R.AMPLIO if args.contexto_amplio else None,
         "casos": Path(args.casos).name,
     }
     RESULTADOS.mkdir(exist_ok=True)
@@ -287,7 +291,8 @@ def evaluar_completo(args, casos):
     for rep in range(1, args.repeticiones + 1):
         print(f"\n=== {etiqueta} · ejecución {rep} de {args.repeticiones}")
         filas = una_ejecucion(casos, args.modelo, args.max_obsoletos, por_id, not args.fichas_sin_modelo,
-                              args.reformular, args.enrutar, not args.sin_tablas, args.tablas_padre)
+                              args.reformular, args.enrutar, not args.sin_tablas, args.tablas_padre,
+                              args.contexto_amplio)
         res = {**config, "repeticion": rep, "fecha": datetime.now().isoformat(timespec="seconds"), **resumir(filas)}
         resumenes.append(res)
         nombre = RESULTADOS / f"{etiqueta}-r{rep}.json"
@@ -357,6 +362,7 @@ def main():
     ap.add_argument("--enrutar", action="store_true", help="Sonnet solo para las consultas con un fragmento de 2014")
     ap.add_argument("--sin-tablas", action="store_true", help="sin añadir tablas al contexto (alternativa medida)")
     ap.add_argument("--tablas-padre", action="store_true", help="añadir también las tablas del apartado padre")
+    ap.add_argument("--contexto-amplio", action="store_true", help="60 candidatos, 20 fragmentos, 2 de 2014 y tablas del padre")
     args = ap.parse_args()
 
     if args.tabla:
@@ -368,16 +374,16 @@ def main():
     from asistente.busqueda import MODELO_EMB, Buscador
     modelo = args.modelo_emb or MODELO_EMB
     buscador = Buscador(vectorial=not args.sin_vectores, modelo=modelo, raices=not args.sin_raices, sinonimos=not args.sin_sinonimos)
-    filas = evaluar_recuperacion(buscador, casos, tablas_padre=args.tablas_padre)
+    filas = evaluar_recuperacion(buscador, casos, tablas_padre=args.tablas_padre, amplio=args.contexto_amplio)
     res = resumen(filas)
     imprimir(filas, res)
     config = {"modo": "solo_recuperacion", "embeddings": None if args.sin_vectores else modelo,
               "candidatos_por_lista": 20, "rrf": 60, "fecha": datetime.now().isoformat(timespec="seconds"),
               "raices": not args.sin_raices, "sinonimos": not args.sin_sinonimos, "tablas_padre": args.tablas_padre,
-              "casos": Path(args.casos).name}
+              "contexto_amplio": args.contexto_amplio, "casos": Path(args.casos).name}
     RESULTADOS.mkdir(exist_ok=True)
     nombre = "recuperacion-bm25" if args.sin_vectores else f"recuperacion-{modelo.split('/')[-1]}"
-    nombre += "-sin-raices" * args.sin_raices + "-sin-sinonimos" * args.sin_sinonimos + "-tablas-padre" * args.tablas_padre
+    nombre += "-sin-raices" * args.sin_raices + "-sin-sinonimos" * args.sin_sinonimos + "-tablas-padre" * args.tablas_padre + "-contexto-amplio" * args.contexto_amplio
     if Path(args.casos).name != CASOS.name:
         nombre += f"-{Path(args.casos).stem}"
     with open(RESULTADOS / f"{nombre}.json", "w", encoding="utf-8") as fh:

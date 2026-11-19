@@ -20,6 +20,7 @@ python -m asistente.evaluar --solo-recuperacion --sin-vectores
 python -m asistente.evaluar --modelo claude-haiku-5-5 --repeticiones 3
 python -m asistente.evaluar --modelo claude-haiku-5-5 --reformular --repeticiones 3   # configuración entregada
 python -m asistente.evaluar --modelo claude-haiku-5-5 --tablas-padre --repeticiones 3 # opción medida (fallo 24)
+python -m asistente.evaluar --modelo claude-haiku-5-5 --reformular --contexto-amplio --repeticiones 3   # opción medida (fallo 30)
 python -m asistente.evaluar --tabla                          # compara las ejecuciones de resultados/
 ```
 
