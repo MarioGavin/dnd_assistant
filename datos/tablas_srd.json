@@ -1,0 +1,72 @@
+{
+ "_nota": "Tablas copiadas a mano del SRD 5.2.1 ES (SP_SRD_CC_v5.2.1.pdf). Cada bloque lleva su apartado y página. Cubre los niveles 1-5.",
+ "documento": "SRD 5.2.1 ES",
+ "niveles": [1, 5],
+ "caracteristicas": ["FUE", "DES", "CON", "INT", "SAB", "CAR"],
+ "coste_en_puntos": {
+  "presupuesto": 27,
+  "costes": {"8": 0, "9": 1, "10": 2, "11": 3, "12": 4, "13": 5, "14": 7, "15": 9},
+  "fuente": {"apartado": "Tabla: Costes en puntos de las puntuaciones de característica", "pagina": 23}
+ },
+ "conjunto_estandar": {
+  "valores": [15, 14, 13, 12, 10, 8],
+  "fuente": {"apartado": "Genera tus puntuaciones", "pagina": 23}
+ },
+ "aumentos_trasfondo": {
+  "regla": "+2 a una de las tres características del trasfondo y +1 a otra distinta, o +1 a las tres; ninguna por encima de 20",
+  "maximo": 20,
+  "fuente": {"apartado": "Ajusta las puntuaciones de característica", "pagina": 23}
+ },
+ "trasfondos": {
+  "valores": {
+   "Acólito": ["INT", "SAB", "CAR"],
+   "Criminal": ["DES", "CON", "INT"],
+   "Erudito": ["CON", "INT", "SAB"],
+   "Soldado": ["FUE", "DES", "CON"]
+  },
+  "fuente": {"apartado": "Descripciones de trasfondos", "pagina": 89}
+ },
+ "especies": {
+  "valores": ["Dracónido", "Elfo", "Enano", "Gnomo", "Goliat", "Humano", "Mediano", "Orco", "Tiefling"],
+  "regla": "En 2024 la especie no aumenta puntuaciones de característica (en 2014 sí)",
+  "fuente": {"apartado": "Descripciones de las especies", "pagina": 90}
+ },
+ "mejora_caracteristica": {
+  "nivel_minimo": 4,
+  "total": 2,
+  "maximo": 20,
+  "fuente": {"apartado": "Mejora de característica", "pagina": 94}
+ },
+ "clases": {
+  "valores": {
+   "Bárbaro":    {"pg_nivel_1": 12, "pg_por_nivel": 7, "subclase": "Senda del berserker"},
+   "Bardo":      {"pg_nivel_1": 8,  "pg_por_nivel": 5, "subclase": "Colegio del conocimiento"},
+   "Brujo":      {"pg_nivel_1": 8,  "pg_por_nivel": 5, "subclase": "Patrón infernal"},
+   "Clérigo":    {"pg_nivel_1": 8,  "pg_por_nivel": 5, "subclase": "Dominio de la vida"},
+   "Druida":     {"pg_nivel_1": 8,  "pg_por_nivel": 5, "subclase": "Círculo de la tierra"},
+   "Explorador": {"pg_nivel_1": 10, "pg_por_nivel": 6, "subclase": "Cazador"},
+   "Guerrero":   {"pg_nivel_1": 10, "pg_por_nivel": 6, "subclase": "Campeón"},
+   "Hechicero":  {"pg_nivel_1": 6,  "pg_por_nivel": 4, "subclase": "Hechicería dracónica"},
+   "Mago":       {"pg_nivel_1": 6,  "pg_por_nivel": 4, "subclase": "Evocador"},
+   "Monje":      {"pg_nivel_1": 8,  "pg_por_nivel": 5, "subclase": "Guerrero de la mano abierta"},
+   "Paladín":    {"pg_nivel_1": 10, "pg_por_nivel": 6, "subclase": "Juramento de entrega"},
+   "Pícaro":     {"pg_nivel_1": 8,  "pg_por_nivel": 5, "subclase": "Ladrón"}
+  },
+  "fuente_pg_nivel_1": {"apartado": "Tabla: Puntos de golpe en el nivel 1 por clase", "pagina": 25},
+  "fuente_pg_por_nivel": {"apartado": "Tabla: Puntos de golpe establecidos por clase", "pagina": 26}
+ },
+ "rasgos_pg": {
+  "Aguante enano": {"especie": "Enano", "por_nivel": 1, "desde_nivel": 1,
+                    "fuente": {"apartado": "Descripciones de las especies › Enano", "pagina": 91}},
+  "Resistencia dracónica": {"subclase": "Hechicería dracónica", "por_nivel": 1, "desde_nivel": 3,
+                            "fuente": {"apartado": "Nivel 3: Resistencia dracónica", "pagina": 70}}
+ },
+ "competencia": {
+  "por_nivel": {"1": 2, "2": 2, "3": 2, "4": 2, "5": 3},
+  "fuente": {"apartado": "Tabla: Progreso de los personajes", "pagina": 25}
+ },
+ "modificador": {
+  "regla": "(puntuación − 10) / 2, redondeando hacia abajo",
+  "fuente": {"apartado": "Tabla: Puntuaciones de característica y modificadores", "pagina": 23}
+ }
+}
