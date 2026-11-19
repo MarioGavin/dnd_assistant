@@ -11,7 +11,8 @@ Consulta:
   4. montar_contexto() fragmentos numerados [1], [2]… entre <documentos>.
   5. llamar()          API de Anthropic; se guardan stop_reason y los tipos de bloque.
 
-Opciones medidas (desactivadas por defecto en las funciones; la línea de órdenes reformula):
+Opciones medidas (desactivadas por defecto en las funciones; la línea de órdenes reformula y
+usa el contexto ampliado, que es la configuración entregada: DECISIONES.md, filas 14 y 19):
   reformular  antes de buscar, un modelo barato añade a la pregunta los términos del SRD.
   contexto_amplio  buscar entre más candidatos y dar más fragmentos (AMPLIO).
   tablas_padre  añadir también las tablas del apartado padre (fallo 24: «Tabla: Rasgos de mago»
@@ -50,6 +51,12 @@ TABLAS_FIJAS = ("Tabla: Puntuaciones de característica y modificadores",   # SR
 VERSION_PROMPT = "v2"    # v1: avance del 15 nov
 NO_ESTA = "No está en el SRD 5.2.1."
 AVISO_2014 = "Cambio respecto a 2014:"
+
+# Modelo local (opcional, GPU): se usa cuando el nombre empieza por «Qwen/». fp16 sin cuantizar
+# (4B ≈ 8 GB, cabe en una T4 de 16 GB) y sin modo de razonamiento, para que tarde poco.
+MODELO_LOCAL = "Qwen/Qwen3-4B"
+MAX_TOKENS_LOCAL = 1024      # la T4 genera despacio; las respuestas son de pocas frases
+GENERACION_LOCAL = {"do_sample": True, "temperature": 0.7, "top_p": 0.8, "top_k": 20}   # valores de Qwen sin razonamiento [PENDIENTE: confirmar en la ficha]
 
 # Precio en dólares por millón de tokens (entrada, salida), página oficial de precios de
 # Anthropic consultada el 1 nov 2026. Haiku: tarifa para prompts de hasta 100 000 tokens.
@@ -213,14 +220,18 @@ def montar_contexto(pregunta, usados):
 
 
 def abstiene(texto):
-    """Solo cuenta como abstención si la respuesta EMPIEZA por la frase (fallo 13)."""
-    return _sin_tildes(texto.strip().lower()).startswith(_sin_tildes(NO_ESTA.lower()))
+    """Solo cuenta como abstención si la respuesta EMPIEZA por la frase (fallo 13), con punto
+    o con dos puntos: «No está en el SRD 5.2.1: los fragmentos…» (fallo 31)."""
+    t = _sin_tildes(texto.strip().lower())
+    frase = _sin_tildes(NO_ESTA.lower()).rstrip(".")
+    return t.startswith(frase) and t[len(frase):len(frase) + 1] in (".", ":")
 
 
 # ---------------------------------------------------------------- llamada al modelo
 
 _buscador = None
 _cliente = None
+_locales = {}
 
 
 def buscador(vectores=False):
@@ -242,9 +253,46 @@ def cliente():
     return _cliente
 
 
+def cargar_local(modelo):
+    """Tokenizador y modelo de Hugging Face, cargados una sola vez (la carga no cuenta en los segundos)."""
+    if modelo not in _locales:
+        import torch
+        from transformers import AutoModelForCausalLM, AutoTokenizer
+        tok = AutoTokenizer.from_pretrained(modelo)
+        mod = AutoModelForCausalLM.from_pretrained(modelo, torch_dtype=torch.float16, device_map="auto")
+        _locales[modelo] = (tok, mod)
+    return _locales[modelo]
+
+
+def llamar_local(sistema, mensaje, modelo=MODELO_LOCAL, max_tokens=MAX_TOKENS_LOCAL):
+    """Lo mismo que llamar(), con un modelo abierto en la GPU: mismo prompt, mismos campos, coste 0."""
+    import re
+    import torch
+    tok, mod = cargar_local(modelo)
+    texto = tok.apply_chat_template([{"role": "system", "content": sistema}, {"role": "user", "content": mensaje}],
+                                    tokenize=False, add_generation_prompt=True, enable_thinking=False)
+    ids = tok(texto, return_tensors="pt").to(mod.device)
+    limite = min(max_tokens, MAX_TOKENS_LOCAL)
+    inicio = time.time()
+    with torch.no_grad():
+        salida = mod.generate(**ids, max_new_tokens=limite, pad_token_id=tok.eos_token_id, **GENERACION_LOCAL)
+    segundos = time.time() - inicio
+    nuevos = salida[0][ids["input_ids"].shape[1]:]
+    respuesta = re.sub(r"<think>.*?</think>", "", tok.decode(nuevos, skip_special_tokens=True), flags=re.S).strip()
+    cortada = len(nuevos) >= limite
+    return {
+        "respuesta": respuesta, "modelo": modelo,
+        "stop_reason": "max_tokens" if cortada else "end_turn", "cortada": cortada, "bloques": ["text"],
+        "tokens_entrada": int(ids["input_ids"].shape[1]), "tokens_salida": int(len(nuevos)),
+        "coste_usd": 0.0, "segundos": round(segundos, 2),
+    }
+
+
 def llamar(sistema, mensaje, modelo=MODELO, max_tokens=MAX_TOKENS):
     """Una llamada a la API. Sin temperature: los modelos actuales no la aceptan; la
-    variabilidad se mide repitiendo la evaluación."""
+    variabilidad se mide repitiendo la evaluación. Si el modelo empieza por «Qwen/», en local."""
+    if modelo.startswith("Qwen/"):
+        return llamar_local(sistema, mensaje, modelo, max_tokens)
     inicio = time.time()
     r = cliente().messages.create(model=modelo, max_tokens=max_tokens, system=sistema,
                                   messages=[{"role": "user", "content": mensaje}])
@@ -356,7 +404,8 @@ if __name__ == "__main__":
     ap.add_argument("--sin-reformular", action="store_true",
                     help="buscar con la pregunta tal cual (por defecto se reformula: DECISIONES.md, fila 14)")
     ap.add_argument("--tablas-padre", action="store_true", help="añadir también las tablas del apartado padre")
-    ap.add_argument("--contexto-amplio", action="store_true", help=f"más candidatos y fragmentos: {AMPLIO}")
+    ap.add_argument("--sin-contexto-amplio", action="store_true",
+                    help=f"contexto normal (por defecto se amplía: {AMPLIO})")
     ap.add_argument("--enrutar", action="store_true", help=f"usar {MODELO_ENRUTADO} si el contexto trae un fragmento de 2014")
     args = ap.parse_args()
     if args.pregunta.endswith(".json"):
@@ -364,7 +413,7 @@ if __name__ == "__main__":
     else:
         r = responder(args.pregunta, modelo=args.modelo, vectores=args.vectores,
                       reformular_pregunta=not args.sin_reformular, enrutar=args.enrutar,
-                      tablas_padre=args.tablas_padre, contexto_amplio=args.contexto_amplio)
+                      tablas_padre=args.tablas_padre, contexto_amplio=not args.sin_contexto_amplio)
         if r.get("consulta"):
             print("Búsqueda:", r["consulta"], "\n")
     print(r["respuesta"], "\n\nFragmentos que recibió el modelo:")

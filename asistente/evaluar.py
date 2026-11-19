@@ -41,6 +41,11 @@ FUERA = 99               # puesto que se anota cuando la fuente no aparece
 ETIQUETAS = {"claude-haiku-5-5": "haiku-5.5", "claude-sonnet-5-5": "sonnet-5.5"}
 
 
+def etiqueta_modelo(modelo):
+    """Nombre corto para los ficheros: «Qwen/Qwen3-4B» → «qwen3-4b» (sin «/»)."""
+    return ETIQUETAS.get(modelo, modelo.split("/")[-1].lower())
+
+
 # ---------------------------------------------------------------- utilidades de puntuación
 
 def normalizar(t):
@@ -163,13 +168,44 @@ def puntuar_consulta(caso, r, por_id):
         "cita": all(any(coincide(f, fu, con_pagina=False) for f in citados for fu in g) for g in grupos) if grupos else None,
         "cita_obsoleta_sola": bool(citados) and all(not f["vigente"] for f in citados),
     }
-    if caso["tipo"] == "debe_fallar":
-        p["correcto"] = p["abstiene"] and not prohibido and not p["cortada"] and not p["error"]
+    return veredicto(p, caso["tipo"])
+
+
+def veredicto(p, tipo):
+    """correcto y correcto_con_cita a partir de las comprobaciones de puntuar_consulta()."""
+    if tipo == "debe_fallar":
+        p["correcto"] = bool(p["abstiene"] and not p["prohibidos"] and not p["cortada"] and not p["error"])
     else:
-        p["correcto"] = (not p["abstiene"] and not p["cortada"] and not p["error"] and p["requiere"]
-                         and not prohibido and p["aviso"] is not False)
+        p["correcto"] = bool(not p["abstiene"] and not p["cortada"] and not p["error"] and p["requiere"]
+                             and not p["prohibidos"] and p["aviso"] is not False)
     p["correcto_con_cita"] = p["correcto"] and p["cita"] is not False
     return p
+
+
+def repuntuar(motivo="abstención con punto o dos puntos (fallo 31)"):
+    """Vuelve a calcular la abstención y el veredicto de las consultas ya guardadas en
+    resultados/ con el detector actual, sin llamar al modelo. Las demás comprobaciones
+    (requiere, prohibidos, aviso, cita) se conservan tal como se guardaron."""
+    from asistente.responder import abstiene
+    for ruta in sorted(glob.glob(str(RESULTADOS / "*-r[0-9]*.json"))):
+        datos = json.load(open(ruta, encoding="utf-8"))
+        if "repeticion" not in datos.get("resumen", {}):
+            continue
+        cambios = []
+        for f in datos["casos"]:
+            if f["modo"] != "consulta":
+                continue
+            antes = (f["abstiene"], f["correcto"])
+            f["abstiene"] = abstiene(f.get("respuesta", ""))
+            veredicto(f, f["tipo"])
+            if (f["abstiene"], f["correcto"]) != antes:
+                cambios.append(f["id"])
+        if cambios:
+            datos["resumen"].update(resumir(datos["casos"]))
+            datos["resumen"]["repuntuado"] = f"{datetime.now().isoformat(timespec='seconds')}: {motivo}; cambian {cambios}"
+            with open(ruta, "w", encoding="utf-8") as fh:
+                json.dump(datos, fh, ensure_ascii=False, indent=1)
+            print(f"{Path(ruta).name}: {cambios}")
 
 
 def puntuar_ficha(caso, r):
@@ -270,7 +306,7 @@ def evaluar_completo(args, casos):
 
     import anthropic
     por_id = {f["id"]: f for f in cargar()}
-    etiqueta = args.etiqueta or (ETIQUETAS.get(args.modelo, args.modelo)
+    etiqueta = args.etiqueta or (etiqueta_modelo(args.modelo)
                                  + "-reformular" * args.reformular + "-enrutar" * args.enrutar
                                  + "-sin-tablas" * args.sin_tablas + "-tablas-padre" * args.tablas_padre
                                  + "-contexto-amplio" * args.contexto_amplio)
@@ -285,6 +321,8 @@ def evaluar_completo(args, casos):
         "tablas": not args.sin_tablas, "tablas_padre": args.tablas_padre,
         "contexto_amplio": R.AMPLIO if args.contexto_amplio else None,
         "casos": Path(args.casos).name,
+        "generacion_local": {**R.GENERACION_LOCAL, "max_new_tokens": R.MAX_TOKENS_LOCAL, "dtype": "float16",
+                             "razonamiento": False} if args.modelo.startswith("Qwen/") else None,
     }
     RESULTADOS.mkdir(exist_ok=True)
     resumenes = []
@@ -358,6 +396,8 @@ def main():
     ap.add_argument("--etiqueta", default=None, help="nombre de los ficheros de resultados")
     ap.add_argument("--fichas-sin-modelo", action="store_true", help="solo el validador, sin explicación del modelo")
     ap.add_argument("--tabla", action="store_true", help="tabla comparativa de resultados/ (sin llamadas)")
+    ap.add_argument("--repuntuar", action="store_true",
+                    help="volver a puntuar las consultas guardadas con el detector actual (sin llamadas)")
     ap.add_argument("--reformular", action="store_true", help="añadir términos del SRD a la pregunta antes de buscar")
     ap.add_argument("--enrutar", action="store_true", help="Sonnet solo para las consultas con un fragmento de 2014")
     ap.add_argument("--sin-tablas", action="store_true", help="sin añadir tablas al contexto (alternativa medida)")
@@ -365,6 +405,9 @@ def main():
     ap.add_argument("--contexto-amplio", action="store_true", help="60 candidatos, 20 fragmentos, 2 de 2014 y tablas del padre")
     args = ap.parse_args()
 
+    if args.repuntuar:
+        repuntuar()
+        return tabla()
     if args.tabla:
         return tabla()
     casos = cargar_casos(args.casos)

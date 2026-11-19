@@ -13,14 +13,16 @@ En local (Python 3.10+):
 ```
 pip install pymupdf rank-bm25 snowballstemmer anthropic pytest
 python -m pytest -q
-python -m asistente.responder "Tengo 2 niveles de cansancio, ¿qué me pasa al atacar?"   # Haiku, reformulando la pregunta
-python -m asistente.responder "..." --sin-reformular        # buscar con la pregunta tal cual
+python -m asistente.responder "Tengo 2 niveles de cansancio, ¿qué me pasa al atacar?"   # Haiku, reformulando y con contexto ampliado
+python -m asistente.responder "..." --sin-reformular --sin-contexto-amplio               # búsqueda y contexto básicos
 python -m asistente.fichas                                   # valida las fichas de los casos, sin modelo
 python -m asistente.evaluar --solo-recuperacion --sin-vectores
 python -m asistente.evaluar --modelo claude-haiku-5-5 --repeticiones 3
-python -m asistente.evaluar --modelo claude-haiku-5-5 --reformular --repeticiones 3   # configuración entregada
+python -m asistente.evaluar --modelo claude-haiku-5-5 --reformular --contexto-amplio --repeticiones 3   # configuración entregada
+python -m asistente.evaluar --modelo claude-haiku-5-5 --reformular --repeticiones 3
 python -m asistente.evaluar --modelo claude-haiku-5-5 --tablas-padre --repeticiones 3 # opción medida (fallo 24)
-python -m asistente.evaluar --modelo claude-haiku-5-5 --reformular --contexto-amplio --repeticiones 3   # opción medida (fallo 30)
+python -m asistente.evaluar --modelo Qwen/Qwen3-4B --repeticiones 1   # modelo local: necesita GPU, torch, transformers y accelerate
+python -m asistente.evaluar --repuntuar                      # vuelve a puntuar lo guardado con el detector actual
 python -m asistente.evaluar --tabla                          # compara las ejecuciones de resultados/
 ```
 

@@ -23,7 +23,7 @@
   "consultas_debe_fallar": "2/2",
   "consultas_normal_con_cita": "1/5",
   "consultas_limite_con_cita": "1/7",
-  "abstenciones_indebidas": "2/12",
+  "abstenciones_indebidas": "4/12",
   "recuperacion": "9/12",
   "fichas_veredicto": "6/6",
   "fichas_motivos": "6/6",
@@ -41,7 +41,8 @@
   "coste_medio_consulta_usd": 0.00086,
   "segundos_medios": 3.85,
   "segundos_max": 7.66,
-  "tablas": false
+  "tablas": false,
+  "repuntuado": "2026-11-19T18:13:21: abstención con punto o dos puntos (fallo 31); cambian ['L03', 'L09']"
  },
  "casos": [
   {
@@ -453,7 +454,7 @@
    "tipo": "limite",
    "modo": "consulta",
    "subtipo": null,
-   "abstiene": false,
+   "abstiene": true,
    "cortada": false,
    "error": null,
    "requiere": false,
@@ -694,7 +695,7 @@
    "tipo": "limite",
    "modo": "consulta",
    "subtipo": null,
-   "abstiene": false,
+   "abstiene": true,
    "cortada": false,
    "error": null,
    "requiere": false,

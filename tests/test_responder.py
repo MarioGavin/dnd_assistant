@@ -37,6 +37,7 @@ def falso(monkeypatch):
     ("No está en el SRD 5.2.1.", True),
     ("  No está en el SRD 5.2.1. El contemplador no aparece.", True),
     ("No esta en el SRD 5.2.1.", True),
+    ("No está en el SRD 5.2.1: los fragmentos no describen el Juramento de venganza.", True),   # fallo 31
     # respuesta correcta que contiene la frase (fallo 13): no es abstención
     ("No está en el SRD 5.2.1 que los bandidos pierdan su primer turno. Lo que sí dice…", False),
     ("Tienen desventaja en la iniciativa [1]. No está en el SRD 5.2.1.", False),
@@ -174,3 +175,19 @@ def test_contexto_amplio():
                            tablas_padre=True, candidatos=R.AMPLIO["candidatos"])
     assert len(amplio) > len(normal)
     assert sum(not f["vigente"] for f in amplio) <= R.AMPLIO["max_obsoletos"]
+
+
+def test_modelo_local_no_llama_a_la_api(monkeypatch, falso):
+    """Con «Qwen/…» la llamada va a llamar_local() (GPU) y no al cliente de Anthropic."""
+    vistos = []
+    monkeypatch.setattr(R, "llamar_local", lambda s, m, modelo, mt: vistos.append(modelo) or
+                        {"respuesta": "Respuesta [1].", "modelo": modelo, "stop_reason": "end_turn", "cortada": False,
+                         "bloques": ["text"], "tokens_entrada": 10, "tokens_salida": 5, "coste_usd": 0.0, "segundos": 1.0})
+    r = R.responder("Tengo 2 niveles de cansancio, ¿qué me pasa al atacar?", modelo=R.MODELO_LOCAL)
+    assert vistos == [R.MODELO_LOCAL] and not falso.peticiones and r["coste_usd"] == 0.0
+
+
+def test_etiqueta_sin_barra():
+    from asistente.evaluar import etiqueta_modelo
+    assert etiqueta_modelo("Qwen/Qwen3-4B") == "qwen3-4b"
+    assert etiqueta_modelo("claude-haiku-5-5") == "haiku-5.5"
