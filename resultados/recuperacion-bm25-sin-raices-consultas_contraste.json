@@ -1,0 +1,199 @@
+{
+ "config": {
+  "modo": "solo_recuperacion",
+  "embeddings": null,
+  "candidatos_por_lista": 20,
+  "rrf": 60,
+  "fecha": "2026-11-19T03:29:44",
+  "raices": false,
+  "sinonimos": true,
+  "casos": "consultas_contraste.json"
+ },
+ "resumen": {
+  "lexica@5": "4/12",
+  "lexica@10": "5/12",
+  "contexto": "6/12"
+ },
+ "casos": [
+  {
+   "id": "C01",
+   "tipo": "normal",
+   "grupos": [
+    {
+     "fuente": "Descanso largo p. 199",
+     "vectorial": null,
+     "lexica": 48,
+     "combinada": null,
+     "contexto": false
+    }
+   ],
+   "obsoleta_en_10": false,
+   "obsoleta_en_contexto": false
+  },
+  {
+   "id": "C02",
+   "tipo": "normal",
+   "grupos": [
+    {
+     "fuente": "Derribado [estado] p. 199",
+     "vectorial": null,
+     "lexica": 99,
+     "combinada": null,
+     "contexto": false
+    }
+   ],
+   "obsoleta_en_10": false,
+   "obsoleta_en_contexto": false
+  },
+  {
+   "id": "C03",
+   "tipo": "normal",
+   "grupos": [
+    {
+     "fuente": "Tiradas de salvación contra muerte p. 19",
+     "vectorial": null,
+     "lexica": 22,
+     "combinada": null,
+     "contexto": false
+    }
+   ],
+   "obsoleta_en_10": false,
+   "obsoleta_en_contexto": false
+  },
+  {
+   "id": "C04",
+   "tipo": "normal",
+   "grupos": [
+    {
+     "fuente": "Esconderse [acción] p. 201",
+     "vectorial": null,
+     "lexica": 99,
+     "combinada": null,
+     "contexto": false
+    }
+   ],
+   "obsoleta_en_10": false,
+   "obsoleta_en_contexto": false
+  },
+  {
+   "id": "C05",
+   "tipo": "normal",
+   "grupos": [
+    {
+     "fuente": "Ventaja y desventaja p. 8 | Ventaja p. 210",
+     "vectorial": null,
+     "lexica": 1,
+     "combinada": null,
+     "contexto": true
+    }
+   ],
+   "obsoleta_en_10": false,
+   "obsoleta_en_contexto": false
+  },
+  {
+   "id": "C06",
+   "tipo": "limite",
+   "grupos": [
+    {
+     "fuente": "Inspiración heroica p. 203",
+     "vectorial": null,
+     "lexica": 2,
+     "combinada": null,
+     "contexto": true
+    }
+   ],
+   "obsoleta_en_10": false,
+   "obsoleta_en_contexto": false
+  },
+  {
+   "id": "C07",
+   "tipo": "normal",
+   "grupos": [
+    {
+     "fuente": "Proyectil mágico p. 177",
+     "vectorial": null,
+     "lexica": 1,
+     "combinada": null,
+     "contexto": true
+    }
+   ],
+   "obsoleta_en_10": false,
+   "obsoleta_en_contexto": false
+  },
+  {
+   "id": "C08",
+   "tipo": "normal",
+   "grupos": [
+    {
+     "fuente": "Cobertura p. 16 | Cobertura p. 198",
+     "vectorial": null,
+     "lexica": 4,
+     "combinada": null,
+     "contexto": true
+    }
+   ],
+   "obsoleta_en_10": false,
+   "obsoleta_en_contexto": false
+  },
+  {
+   "id": "C09",
+   "tipo": "normal",
+   "grupos": [
+    {
+     "fuente": "Capacidad de carga p. 197",
+     "vectorial": null,
+     "lexica": 13,
+     "combinada": null,
+     "contexto": true
+    }
+   ],
+   "obsoleta_en_10": false,
+   "obsoleta_en_contexto": false
+  },
+  {
+   "id": "C10",
+   "tipo": "limite",
+   "grupos": [
+    {
+     "fuente": "Utilizar [acción] p. 209",
+     "vectorial": null,
+     "lexica": 29,
+     "combinada": null,
+     "contexto": false
+    }
+   ],
+   "obsoleta_en_10": false,
+   "obsoleta_en_contexto": false
+  },
+  {
+   "id": "C11",
+   "tipo": "normal",
+   "grupos": [
+    {
+     "fuente": "Ataques de oportunidad p. 17 | Ataques de oportunidad p. 196",
+     "vectorial": null,
+     "lexica": 9,
+     "combinada": null,
+     "contexto": true
+    }
+   ],
+   "obsoleta_en_10": false,
+   "obsoleta_en_contexto": false
+  },
+  {
+   "id": "C12",
+   "tipo": "normal",
+   "grupos": [
+    {
+     "fuente": "Agarrado [estado] p. 194",
+     "vectorial": null,
+     "lexica": 27,
+     "combinada": null,
+     "contexto": false
+    }
+   ],
+   "obsoleta_en_10": false,
+   "obsoleta_en_contexto": false
+  }
+ ]
+}
