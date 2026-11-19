@@ -4,16 +4,19 @@
   "embeddings": "Qwen/Qwen3-Embedding-0.6B",
   "candidatos_por_lista": 20,
   "rrf": 60,
-  "fecha": "2026-11-16T04:27:07",
+  "fecha": "2026-11-19T04:26:53",
+  "raices": true,
+  "sinonimos": true,
   "casos": "casos_prueba.json"
  },
  "resumen": {
   "vectorial@5": "4/12",
   "vectorial@10": "6/12",
-  "lexica@5": "4/12",
-  "lexica@10": "6/12",
-  "combinada@5": "5/12",
-  "combinada@10": "5/12"
+  "lexica@5": "7/12",
+  "lexica@10": "8/12",
+  "combinada@5": "6/12",
+  "combinada@10": "6/12",
+  "contexto": "7/12"
  },
  "casos": [
   {
@@ -24,10 +27,12 @@
      "fuente": "Caídas [peligro] p. 197",
      "vectorial": 2,
      "lexica": 99,
-     "combinada": 17
+     "combinada": 17,
+     "contexto": true
     }
    ],
-   "obsoleta_en_10": false
+   "obsoleta_en_10": false,
+   "obsoleta_en_contexto": false
   },
   {
    "id": "N03",
@@ -37,10 +42,12 @@
      "fuente": "Subir de nivel p. 26",
      "vectorial": 3,
      "lexica": 1,
-     "combinada": 1
+     "combinada": 1,
+     "contexto": true
     }
    ],
-   "obsoleta_en_10": false
+   "obsoleta_en_10": false,
+   "obsoleta_en_contexto": false
   },
   {
    "id": "N04",
@@ -50,16 +57,19 @@
      "fuente": "Rellena los números p. 24 | Tiradas de salvación p. 117",
      "vectorial": 20,
      "lexica": 99,
-     "combinada": 38
+     "combinada": 38,
+     "contexto": false
     },
     {
      "fuente": "Progresión de niveles p. 25 | Tabla: Rasgos de clérigo p. 47",
-     "vectorial": 32,
+     "vectorial": 36,
      "lexica": 99,
-     "combinada": 61
+     "combinada": 68,
+     "contexto": false
     }
    ],
-   "obsoleta_en_10": false
+   "obsoleta_en_10": false,
+   "obsoleta_en_contexto": false
   },
   {
    "id": "N05",
@@ -69,10 +79,12 @@
      "fuente": "Concentración p. 198",
      "vectorial": 35,
      "lexica": 2,
-     "combinada": 3
+     "combinada": 3,
+     "contexto": true
     }
    ],
-   "obsoleta_en_10": false
+   "obsoleta_en_10": false,
+   "obsoleta_en_contexto": false
   },
   {
    "id": "N08",
@@ -82,16 +94,19 @@
      "fuente": "Rasgos de clase de mago p. 71",
      "vectorial": 36,
      "lexica": 99,
-     "combinada": 57
+     "combinada": 59,
+     "contexto": false
     },
     {
      "fuente": "Bola de fuego p. 125",
      "vectorial": 2,
-     "lexica": 7,
-     "combinada": 1
+     "lexica": 11,
+     "combinada": 1,
+     "contexto": true
     }
    ],
-   "obsoleta_en_10": false
+   "obsoleta_en_10": false,
+   "obsoleta_en_contexto": false
   },
   {
    "id": "L01",
@@ -100,11 +115,13 @@
     {
      "fuente": "Cansancio [estado] p. 197",
      "vectorial": 2,
-     "lexica": 1,
-     "combinada": 1
+     "lexica": 2,
+     "combinada": 1,
+     "contexto": true
     }
    ],
-   "obsoleta_en_10": true
+   "obsoleta_en_10": true,
+   "obsoleta_en_contexto": true
   },
   {
    "id": "L02",
@@ -113,11 +130,13 @@
     {
      "fuente": "Cansancio [estado] p. 197",
      "vectorial": 9,
-     "lexica": 99,
-     "combinada": 19
+     "lexica": 7,
+     "combinada": 2,
+     "contexto": true
     }
    ],
-   "obsoleta_en_10": true
+   "obsoleta_en_10": true,
+   "obsoleta_en_contexto": false
   },
   {
    "id": "L03",
@@ -127,22 +146,26 @@
      "fuente": "Rellena los números p. 24",
      "vectorial": 99,
      "lexica": 99,
-     "combinada": 99
+     "combinada": 99,
+     "contexto": false
     },
     {
      "fuente": "Cansancio [estado] p. 197",
      "vectorial": 99,
-     "lexica": 15,
-     "combinada": 31
+     "lexica": 1,
+     "combinada": 11,
+     "contexto": true
     },
     {
      "fuente": "Progresión de niveles p. 25 | Rasgos de clase de mago p. 71",
-     "vectorial": 3,
+     "vectorial": 7,
      "lexica": 99,
-     "combinada": 10
+     "combinada": 19,
+     "contexto": false
     }
    ],
-   "obsoleta_en_10": true
+   "obsoleta_en_10": false,
+   "obsoleta_en_contexto": false
   },
   {
    "id": "L04",
@@ -151,11 +174,13 @@
     {
      "fuente": "Iniciativa p. 14 | Sorpresa p. 208",
      "vectorial": 4,
-     "lexica": 8,
-     "combinada": 4
+     "lexica": 4,
+     "combinada": 4,
+     "contexto": true
     }
    ],
-   "obsoleta_en_10": true
+   "obsoleta_en_10": true,
+   "obsoleta_en_contexto": true
   },
   {
    "id": "L05",
@@ -164,11 +189,13 @@
     {
      "fuente": "Un conjuro por cada espacio de conjuro y turno p. 115",
      "vectorial": 99,
-     "lexica": 11,
-     "combinada": 24
+     "lexica": 5,
+     "combinada": 17,
+     "contexto": false
     }
    ],
-   "obsoleta_en_10": true
+   "obsoleta_en_10": true,
+   "obsoleta_en_contexto": false
   },
   {
    "id": "L08",
@@ -177,11 +204,13 @@
     {
      "fuente": "Ataque sin armas p. 196",
      "vectorial": 99,
-     "lexica": 8,
-     "combinada": 23
+     "lexica": 5,
+     "combinada": 18,
+     "contexto": false
     }
    ],
-   "obsoleta_en_10": true
+   "obsoleta_en_10": true,
+   "obsoleta_en_contexto": true
   },
   {
    "id": "L09",
@@ -189,18 +218,21 @@
    "grupos": [
     {
      "fuente": "Paso 2: definir tu presupuesto de PX p. 221",
-     "vectorial": 6,
+     "vectorial": 5,
      "lexica": 1,
-     "combinada": 2
+     "combinada": 2,
+     "contexto": true
     },
     {
      "fuente": "Paso 3: gastar el presupuesto p. 222",
      "vectorial": 9,
      "lexica": 2,
-     "combinada": 3
+     "combinada": 4,
+     "contexto": true
     }
    ],
-   "obsoleta_en_10": false
+   "obsoleta_en_10": false,
+   "obsoleta_en_contexto": false
   }
  ]
 }

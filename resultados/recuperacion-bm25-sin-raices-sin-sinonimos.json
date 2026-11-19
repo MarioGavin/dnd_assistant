@@ -4,7 +4,7 @@
   "embeddings": null,
   "candidatos_por_lista": 20,
   "rrf": 60,
-  "fecha": "2026-11-19T03:29:04",
+  "fecha": "2026-11-19T04:37:34",
   "raices": false,
   "sinonimos": false,
   "casos": "casos_prueba.json"
@@ -61,7 +61,7 @@
      "vectorial": null,
      "lexica": 99,
      "combinada": null,
-     "contexto": false
+     "contexto": true
     }
    ],
    "obsoleta_en_10": false,
@@ -157,7 +157,7 @@
      "vectorial": null,
      "lexica": 99,
      "combinada": null,
-     "contexto": false
+     "contexto": true
     }
    ],
    "obsoleta_en_10": true,
