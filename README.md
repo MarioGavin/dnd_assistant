@@ -31,7 +31,7 @@ En las fichas, el nombre, el correo y el ID del jugador se sustituyen por un seu
 |---|---|
 | `asistente/corpus.py` | PDF del SRD → markdown → fragmentos por apartado con su página |
 | `asistente/busqueda.py` | Búsqueda por palabras (BM25 con raíces y sinónimos), por significado (embeddings) o combinada |
-| `asistente/responder.py` | Contexto con las dos ediciones emparejadas y llamada a Claude |
+| `asistente/responder.py` | Contexto (2024 primero, 2014 emparejado, cada apartado con sus tablas) y llamada a Claude |
 | `asistente/fichas.py` | Validador de fichas (coste en puntos, bonificadores, PG, competencia) y seudonimización |
 | `asistente/evaluar.py` | Evaluación sobre `casos/casos_prueba.json`: recuperación, o completa con el modelo |
 | `datos/tablas_srd.json` | Tablas del SRD que usa el validador, con apartado y página |
