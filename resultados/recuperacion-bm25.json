@@ -4,9 +4,10 @@
   "embeddings": null,
   "candidatos_por_lista": 20,
   "rrf": 60,
-  "fecha": "2026-11-19T04:38:00",
+  "fecha": "2026-11-19T05:16:44",
   "raices": true,
   "sinonimos": true,
+  "tablas_padre": false,
   "casos": "casos_prueba.json"
  },
  "resumen": {
@@ -50,7 +51,7 @@
    "tipo": "normal",
    "grupos": [
     {
-     "fuente": "Rellena los números p. 24 | Tiradas de salvación p. 117",
+     "fuente": "Rellena los números p. 25 | Tiradas de salvación p. 117",
      "vectorial": null,
      "lexica": 99,
      "combinada": null,
@@ -139,9 +140,9 @@
    "tipo": "limite",
    "grupos": [
     {
-     "fuente": "Rellena los números p. 24",
+     "fuente": "Rellena los números p. 25",
      "vectorial": null,
-     "lexica": 99,
+     "lexica": 26,
      "combinada": null,
      "contexto": false
     },

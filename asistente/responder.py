@@ -7,11 +7,14 @@ Consulta:
   3. emparejar()       delante de cada fragmento de 2014 va su apartado de 2024.
      anadir_tablas()   detrás de cada apartado, sus tablas; al final, las tablas de
                        modificadores y de bonificador por competencia (TABLAS_FIJAS).
+                       Con tablas_padre, también las del apartado padre (±1 página).
   4. montar_contexto() fragmentos numerados [1], [2]… entre <documentos>.
   5. llamar()          API de Anthropic; se guardan stop_reason y los tipos de bloque.
 
-Opciones medidas (desactivadas por defecto):
+Opciones medidas (desactivadas por defecto en las funciones; la línea de órdenes reformula):
   reformular  antes de buscar, un modelo barato añade a la pregunta los términos del SRD.
+  tablas_padre  añadir también las tablas del apartado padre (fallo 24: «Tabla: Rasgos de mago»
+              cuelga de «Rasgos de clase de mago», no de «Nivel 1: Lanzamiento de conjuros»).
   enrutar     Haiku por defecto y Sonnet solo si el contexto trae un fragmento de 2014.
 
 Ficha:
@@ -38,6 +41,7 @@ CANDIDATOS = 20         # candidatos de la búsqueda entre los que se eligen los
 MAX_OBSOLETOS = 1        # fragmentos del SRD 5.1 como máximo (fallo 14; ver --max-obsoletos)
 MAX_TOKENS = 4000        # con 1000 se cortaban respuestas (fallo 11)
 TABLAS = True            # añadir las tablas de cada apartado y las TABLAS_FIJAS (ver --sin-tablas)
+TABLAS_PADRE = False     # añadir también las tablas del apartado padre (ver --tablas-padre)
 TABLAS_FIJAS = ("Tabla: Puntuaciones de característica y modificadores",   # SRD 5.2.1, p. 23
                 "Tabla: Progreso de los personajes")                        # SRD 5.2.1, p. 25
 VERSION_PROMPT = "v2"    # v1: avance del 15 nov
@@ -171,16 +175,20 @@ def emparejar(usados, fragmentos):
     return salida
 
 
-def anadir_tablas(usados, fragmentos):
+def anadir_tablas(usados, fragmentos, padre=TABLAS_PADRE):
     """Detrás de cada apartado, las tablas que cuelgan de él (el corpus guarda cada tabla
-    como fragmento propio y la búsqueda a veces trae el texto sin su tabla). Al final, las
-    dos tablas que necesita casi cualquier cuenta: modificadores y bonificador por competencia."""
+    como fragmento propio y la búsqueda a veces trae el texto sin su tabla). Con padre=True,
+    también las que cuelgan de su apartado padre. Al final, las dos tablas que necesita casi
+    cualquier cuenta: modificadores y bonificador por competencia."""
     salida = []
     for f in usados:
         if f not in salida:
             salida.append(f)
+        rutas = [f["ruta"]]
+        if padre and " › " in f["ruta"]:
+            rutas.append(f["ruta"].rsplit(" › ", 1)[0])
         for g in fragmentos:
-            if (g["vigente"] == f["vigente"] and g["ruta"].startswith(f["ruta"] + " › Tabla")
+            if (g["vigente"] == f["vigente"] and any(g["ruta"].startswith(r + " › Tabla") for r in rutas)
                     and abs(g["pagina"] - f["pagina"]) <= 1 and g not in salida):
                 salida.append(g)
     for nombre in TABLAS_FIJAS:
@@ -190,10 +198,10 @@ def anadir_tablas(usados, fragmentos):
     return salida
 
 
-def contexto(candidatos, fragmentos, k=K, max_obsoletos=MAX_OBSOLETOS, tablas=TABLAS):
+def contexto(candidatos, fragmentos, k=K, max_obsoletos=MAX_OBSOLETOS, tablas=TABLAS, tablas_padre=TABLAS_PADRE):
     """Fragmentos que recibe el modelo, a partir de la lista ordenada de la búsqueda."""
     usados = emparejar(seleccionar(candidatos, fragmentos, k, max_obsoletos), fragmentos)
-    return anadir_tablas(usados, fragmentos) if tablas else usados
+    return anadir_tablas(usados, fragmentos, tablas_padre) if tablas else usados
 
 
 def montar_contexto(pregunta, usados):
@@ -252,12 +260,12 @@ def llamar(sistema, mensaje, modelo=MODELO, max_tokens=MAX_TOKENS):
 
 
 def preparar(pregunta, k=K, busqueda="combinada", vectores=False, max_obsoletos=MAX_OBSOLETOS, consulta=None,
-             tablas=TABLAS):
+             tablas=TABLAS, tablas_padre=TABLAS_PADRE):
     """consulta: texto con el que se busca (por defecto, la pregunta). Al modelo le llega
     siempre la pregunta original."""
     b = buscador(vectores)
     candidatos = b.buscar(consulta or pregunta, busqueda=busqueda, k=CANDIDATOS)
-    usados = contexto(candidatos, b.fragmentos, k, max_obsoletos, tablas)
+    usados = contexto(candidatos, b.fragmentos, k, max_obsoletos, tablas, tablas_padre)
     return usados, montar_contexto(pregunta, usados)
 
 
@@ -268,13 +276,13 @@ def reformular(pregunta):
 
 
 def responder(pregunta, modelo=MODELO, k=K, busqueda="combinada", vectores=False, max_obsoletos=MAX_OBSOLETOS,
-              reformular_pregunta=False, enrutar=False, tablas=TABLAS):
+              reformular_pregunta=False, enrutar=False, tablas=TABLAS, tablas_padre=TABLAS_PADRE):
     extra = None
     consulta = pregunta
     if reformular_pregunta:
         terminos, extra = reformular(pregunta)
         consulta = f"{pregunta} {terminos}"
-    usados, mensaje = preparar(pregunta, k, busqueda, vectores, max_obsoletos, consulta, tablas)
+    usados, mensaje = preparar(pregunta, k, busqueda, vectores, max_obsoletos, consulta, tablas, tablas_padre)
     enrutada = enrutar and any(not f["vigente"] for f in usados)
     r = llamar(SISTEMA, mensaje, MODELO_ENRUTADO if enrutada else modelo)
     if extra:                                   # el coste de reformular cuenta en la consulta
@@ -337,14 +345,17 @@ if __name__ == "__main__":
     ap.add_argument("pregunta", help="pregunta, o ruta de un .json con una ficha")
     ap.add_argument("--vectores", action="store_true", help="búsqueda combinada con embeddings (mejor con GPU)")
     ap.add_argument("--modelo", default=MODELO)
-    ap.add_argument("--reformular", action="store_true", help="añadir términos del SRD a la pregunta antes de buscar")
+    ap.add_argument("--sin-reformular", action="store_true",
+                    help="buscar con la pregunta tal cual (por defecto se reformula: DECISIONES.md, fila 14)")
+    ap.add_argument("--tablas-padre", action="store_true", help="añadir también las tablas del apartado padre")
     ap.add_argument("--enrutar", action="store_true", help=f"usar {MODELO_ENRUTADO} si el contexto trae un fragmento de 2014")
     args = ap.parse_args()
     if args.pregunta.endswith(".json"):
         r = responder_ficha(json.load(open(args.pregunta, encoding="utf-8")), modelo=args.modelo)
     else:
         r = responder(args.pregunta, modelo=args.modelo, vectores=args.vectores,
-                      reformular_pregunta=args.reformular, enrutar=args.enrutar)
+                      reformular_pregunta=not args.sin_reformular, enrutar=args.enrutar,
+                      tablas_padre=args.tablas_padre)
         if r.get("consulta"):
             print("Búsqueda:", r["consulta"], "\n")
     print(r["respuesta"], "\n\nFragmentos que recibió el modelo:")

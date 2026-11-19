@@ -87,7 +87,7 @@ def citas(texto):
 
 # ---------------------------------------------------------------- recuperación
 
-def evaluar_recuperacion(buscador, casos, candidatos=50):
+def evaluar_recuperacion(buscador, casos, candidatos=50, tablas_padre=False):
     from asistente.responder import CANDIDATOS, contexto as montar
     filas = []
     for caso in casos:
@@ -96,7 +96,8 @@ def evaluar_recuperacion(buscador, casos, candidatos=50):
         sig, pal = buscador.listas(caso["pregunta"], candidatos)
         comb = buscador.ordenar(caso["pregunta"], "combinada", candidatos) if sig else None
         orden = comb or pal
-        contexto = montar(buscador.buscar(caso["pregunta"], k=CANDIDATOS), buscador.fragmentos)
+        contexto = montar(buscador.buscar(caso["pregunta"], k=CANDIDATOS), buscador.fragmentos,
+                          tablas_padre=tablas_padre)
         fila = {"id": caso["id"], "tipo": caso["tipo"], "grupos": []}
         for grupo in caso["fuentes"]:
             fila["grupos"].append({
@@ -187,7 +188,7 @@ def puntuar_ficha(caso, r):
 
 
 def una_ejecucion(casos, modelo, max_obsoletos, por_id, fichas_con_modelo=True, reformular=False, enrutar=False,
-                  tablas=True):
+                  tablas=True, tablas_padre=False):
     from asistente import responder as R
     from asistente.fichas import validar
     filas = []
@@ -195,7 +196,8 @@ def una_ejecucion(casos, modelo, max_obsoletos, por_id, fichas_con_modelo=True, 
         try:
             if caso["modo"] == "consulta":
                 r = R.responder(caso["pregunta"], modelo=modelo, max_obsoletos=max_obsoletos,
-                                reformular_pregunta=reformular, enrutar=enrutar, tablas=tablas)
+                                reformular_pregunta=reformular, enrutar=enrutar, tablas=tablas,
+                                tablas_padre=tablas_padre)
             elif fichas_con_modelo:
                 r = R.responder_ficha(caso["ficha"], modelo=modelo)
             else:
@@ -268,7 +270,7 @@ def evaluar_completo(args, casos):
     por_id = {f["id"]: f for f in cargar()}
     etiqueta = args.etiqueta or (ETIQUETAS.get(args.modelo, args.modelo)
                                  + "-reformular" * args.reformular + "-enrutar" * args.enrutar
-                                 + "-sin-tablas" * args.sin_tablas)
+                                 + "-sin-tablas" * args.sin_tablas + "-tablas-padre" * args.tablas_padre)
     config = {
         "etiqueta": etiqueta, "modelo": args.modelo, "k": R.K, "candidatos": R.CANDIDATOS,
         "max_obsoletos": args.max_obsoletos, "busqueda": "BM25 + raíces + sinónimos" if (R.buscador().raices and R.buscador().sinonimos) else "BM25", "max_tokens": R.MAX_TOKENS,
@@ -277,7 +279,7 @@ def evaluar_completo(args, casos):
         "tablas_srd": hashlib.sha1(json.dumps(TABLAS, sort_keys=True).encode("utf-8")).hexdigest()[:10],
         "fichas_con_modelo": not args.fichas_sin_modelo, "sdk_anthropic": anthropic.__version__,
         "reformular": args.reformular, "enrutar": R.MODELO_ENRUTADO if args.enrutar else None,
-        "tablas": not args.sin_tablas,
+        "tablas": not args.sin_tablas, "tablas_padre": args.tablas_padre,
         "casos": Path(args.casos).name,
     }
     RESULTADOS.mkdir(exist_ok=True)
@@ -285,7 +287,7 @@ def evaluar_completo(args, casos):
     for rep in range(1, args.repeticiones + 1):
         print(f"\n=== {etiqueta} · ejecución {rep} de {args.repeticiones}")
         filas = una_ejecucion(casos, args.modelo, args.max_obsoletos, por_id, not args.fichas_sin_modelo,
-                              args.reformular, args.enrutar, not args.sin_tablas)
+                              args.reformular, args.enrutar, not args.sin_tablas, args.tablas_padre)
         res = {**config, "repeticion": rep, "fecha": datetime.now().isoformat(timespec="seconds"), **resumir(filas)}
         resumenes.append(res)
         nombre = RESULTADOS / f"{etiqueta}-r{rep}.json"
@@ -354,6 +356,7 @@ def main():
     ap.add_argument("--reformular", action="store_true", help="añadir términos del SRD a la pregunta antes de buscar")
     ap.add_argument("--enrutar", action="store_true", help="Sonnet solo para las consultas con un fragmento de 2014")
     ap.add_argument("--sin-tablas", action="store_true", help="sin añadir tablas al contexto (alternativa medida)")
+    ap.add_argument("--tablas-padre", action="store_true", help="añadir también las tablas del apartado padre")
     args = ap.parse_args()
 
     if args.tabla:
@@ -365,15 +368,16 @@ def main():
     from asistente.busqueda import MODELO_EMB, Buscador
     modelo = args.modelo_emb or MODELO_EMB
     buscador = Buscador(vectorial=not args.sin_vectores, modelo=modelo, raices=not args.sin_raices, sinonimos=not args.sin_sinonimos)
-    filas = evaluar_recuperacion(buscador, casos)
+    filas = evaluar_recuperacion(buscador, casos, tablas_padre=args.tablas_padre)
     res = resumen(filas)
     imprimir(filas, res)
     config = {"modo": "solo_recuperacion", "embeddings": None if args.sin_vectores else modelo,
               "candidatos_por_lista": 20, "rrf": 60, "fecha": datetime.now().isoformat(timespec="seconds"),
-              "raices": not args.sin_raices, "sinonimos": not args.sin_sinonimos, "casos": Path(args.casos).name}
+              "raices": not args.sin_raices, "sinonimos": not args.sin_sinonimos, "tablas_padre": args.tablas_padre,
+              "casos": Path(args.casos).name}
     RESULTADOS.mkdir(exist_ok=True)
     nombre = "recuperacion-bm25" if args.sin_vectores else f"recuperacion-{modelo.split('/')[-1]}"
-    nombre += "-sin-raices" * args.sin_raices + "-sin-sinonimos" * args.sin_sinonimos
+    nombre += "-sin-raices" * args.sin_raices + "-sin-sinonimos" * args.sin_sinonimos + "-tablas-padre" * args.tablas_padre
     if Path(args.casos).name != CASOS.name:
         nombre += f"-{Path(args.casos).stem}"
     with open(RESULTADOS / f"{nombre}.json", "w", encoding="utf-8") as fh:

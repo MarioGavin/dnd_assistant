@@ -13,11 +13,13 @@ En local (Python 3.10+):
 ```
 pip install pymupdf rank-bm25 snowballstemmer anthropic pytest
 python -m pytest -q
-python -m asistente.responder "Tengo 2 niveles de cansancio, ¿qué me pasa al atacar?"
+python -m asistente.responder "Tengo 2 niveles de cansancio, ¿qué me pasa al atacar?"   # Haiku, reformulando la pregunta
+python -m asistente.responder "..." --sin-reformular        # buscar con la pregunta tal cual
 python -m asistente.fichas                                   # valida las fichas de los casos, sin modelo
 python -m asistente.evaluar --solo-recuperacion --sin-vectores
 python -m asistente.evaluar --modelo claude-haiku-5-5 --repeticiones 3
-python -m asistente.evaluar --modelo claude-haiku-5-5 --reformular --repeticiones 3
+python -m asistente.evaluar --modelo claude-haiku-5-5 --reformular --repeticiones 3   # configuración entregada
+python -m asistente.evaluar --modelo claude-haiku-5-5 --tablas-padre --repeticiones 3 # opción medida (fallo 24)
 python -m asistente.evaluar --tabla                          # compara las ejecuciones de resultados/
 ```
 

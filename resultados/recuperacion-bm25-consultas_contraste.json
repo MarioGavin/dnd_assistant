@@ -4,9 +4,10 @@
   "embeddings": null,
   "candidatos_por_lista": 20,
   "rrf": 60,
-  "fecha": "2026-11-19T04:38:28",
+  "fecha": "2026-11-19T05:16:58",
   "raices": true,
   "sinonimos": true,
+  "tablas_padre": false,
   "casos": "consultas_contraste.json"
  },
  "resumen": {

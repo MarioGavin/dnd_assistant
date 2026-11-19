@@ -47,7 +47,7 @@
     "requiere": [["14"]],
     "fuentes": [
       [
-        {"documento": "SRD 5.2.1 ES", "apartado": "Rellena los números", "pagina": 24},
+        {"documento": "SRD 5.2.1 ES", "apartado": "Rellena los números", "pagina": 25},
         {"documento": "SRD 5.2.1 ES", "apartado": "Tiradas de salvación", "pagina": 117}
       ],
       [
@@ -158,7 +158,7 @@
     "requiere": [["+4"]],
     "aviso": [["2014", "5.1"]],
     "fuentes": [
-      [{"documento": "SRD 5.2.1 ES", "apartado": "Rellena los números", "pagina": 24}],
+      [{"documento": "SRD 5.2.1 ES", "apartado": "Rellena los números", "pagina": 25}],
       [{"documento": "SRD 5.2.1 ES", "apartado": "Cansancio [estado]", "pagina": 197}],
       [
         {"documento": "SRD 5.2.1 ES", "apartado": "Progresión de niveles", "pagina": 25},

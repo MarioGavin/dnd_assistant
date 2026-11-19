@@ -148,3 +148,15 @@ def test_tablas_en_el_contexto():
     for nombre in R.TABLAS_FIJAS:                                                             # y las fijas
         assert sum(r.endswith(nombre) for r in rutas) == 1
     assert len(R.anadir_tablas(usados, FRAGMENTOS)) == len(usados)                           # sin duplicados
+
+
+def test_tablas_del_apartado_padre():
+    """«Tabla: Rasgos de mago» cuelga de «Rasgos de clase de mago», no de su subapartado
+    «Nivel 1: Lanzamiento de conjuros»: solo entra con padre=True (fallo 24)."""
+    hijo = next(f for f in FRAGMENTOS if f["vigente"]
+                and f["ruta"].endswith("Rasgos de clase de mago › Nivel 1: Lanzamiento de conjuros"))
+    tabla = lambda usados: any(f["ruta"].endswith("Tabla: Rasgos de mago") for f in usados)
+    assert not tabla(R.anadir_tablas([hijo], FRAGMENTOS))
+    con_padre = R.anadir_tablas([hijo], FRAGMENTOS, padre=True)
+    assert tabla(con_padre)
+    assert len(R.anadir_tablas(con_padre, FRAGMENTOS, padre=True)) == len(con_padre)       # sin duplicados
