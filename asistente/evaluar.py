@@ -370,6 +370,46 @@ def imprimir_tabla(resumenes, salida=None):
         print(f"\nGuardado en resultados/{Path(salida).name}")
 
 
+def wilson(aciertos, n, z=1.96):
+    """Intervalo de confianza del 95 % para una proporción; sirve con pocos casos.
+    Del cuaderno de demostraciones de la sesión 11 de la asignatura."""
+    if n == 0:
+        return 0.0, 0.0
+    p = aciertos / n
+    den = 1 + z * z / n
+    centro = (p + z * z / (2 * n)) / den
+    margen = z * (p * (1 - p) / n + z * z / (4 * n * n)) ** 0.5 / den
+    return centro - margen, centro + margen
+
+
+def tabla_wilson():
+    """Aciertos de la puntuación automática de cada configuración, sumando sus ejecuciones,
+    con el intervalo de Wilson al 95 %. Se guarda en resultados/wilson.md."""
+    grupos = {}
+    for ruta in sorted(glob.glob(str(RESULTADOS / "*-r[0-9]*.json"))):
+        d = json.load(open(ruta, encoding="utf-8"))
+        if "repeticion" not in d.get("resumen", {}):
+            continue
+        g = grupos.setdefault(d["resumen"]["etiqueta"], {"ejecuciones": 0, "filas": []})
+        g["ejecuciones"] += 1
+        g["filas"] += [f for f in d["casos"] if f["modo"] == "consulta"]
+    tipos = [("normal", ("normal",)), ("límite", ("limite",)), ("normal + límite", ("normal", "limite")),
+             ("deben fallar", ("debe_fallar",))]
+    lineas = ["| config | ejec. | " + " | ".join(t for t, _ in tipos) + " |", "|" + "---|" * (len(tipos) + 2)]
+    for etiqueta, g in grupos.items():
+        celdas = []
+        for _, ts in tipos:
+            fs = [f for f in g["filas"] if f["tipo"] in ts]
+            a = sum(bool(f["correcto"]) for f in fs)
+            lo, hi = wilson(a, len(fs))
+            celdas.append(f"{a}/{len(fs)} ({lo:.0%}-{hi:.0%})")
+        lineas.append(f"| {etiqueta} | {g['ejecuciones']} | " + " | ".join(celdas) + " |")
+    texto = "Aciertos (puntuación automática) sumando las ejecuciones, con el intervalo de Wilson al 95 %.\n\n" + "\n".join(lineas)
+    print(texto)
+    (RESULTADOS / "wilson.md").write_text(texto + "\n", encoding="utf-8")
+    print("\nGuardado en resultados/wilson.md")
+
+
 def tabla():
     resumenes = []
     for ruta in sorted(glob.glob(str(RESULTADOS / "*-r[0-9]*.json"))):
@@ -398,6 +438,7 @@ def main():
     ap.add_argument("--etiqueta", default=None, help="nombre de los ficheros de resultados")
     ap.add_argument("--fichas-sin-modelo", action="store_true", help="solo el validador, sin explicación del modelo")
     ap.add_argument("--tabla", action="store_true", help="tabla comparativa de resultados/ (sin llamadas)")
+    ap.add_argument("--wilson", action="store_true", help="aciertos con el intervalo de Wilson al 95 % (sin llamadas)")
     ap.add_argument("--repuntuar", action="store_true",
                     help="volver a puntuar las consultas guardadas con el detector actual (sin llamadas)")
     ap.add_argument("--reformular", action="store_true", help="añadir términos del SRD a la pregunta antes de buscar")
@@ -410,6 +451,8 @@ def main():
     if args.repuntuar:
         repuntuar()
         return tabla()
+    if args.wilson:
+        return tabla_wilson()
     if args.tabla:
         return tabla()
     casos = cargar_casos(args.casos)

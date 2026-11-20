@@ -107,3 +107,11 @@ def test_etiqueta_con_opciones(monkeypatch, tmp_path):
     res = json.load(open(tmp_path / "haiku-5.5-reformular-enrutar-r1.json", encoding="utf-8"))
     assert res["resumen"]["reformular"] and res["resumen"]["enrutar"] == R.MODELO_ENRUTADO
     assert all(f["consulta"] for f in res["casos"] if f["modo"] == "consulta")
+
+
+def test_wilson():
+    """Valores de referencia: 18/20 → 70-97 %; 20/20 no da 100-100 %."""
+    lo, hi = E.wilson(18, 20)
+    assert round(lo, 3) == 0.699 and round(hi, 3) == 0.972
+    lo, hi = E.wilson(20, 20)
+    assert lo < 1 and round(hi, 3) == 1.0
