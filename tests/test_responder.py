@@ -193,9 +193,11 @@ def test_etiqueta_sin_barra():
     assert etiqueta_modelo("claude-haiku-5-5") == "haiku-5.5"
 
 
-@pytest.mark.parametrize("memoria,bf16,cuantiza_8b", [(15e9, False, True),    # T4: 8B en 4 bits, fp16
-                                                     (40e9, True, False)])   # A100: 8B en bf16 sin cuantizar
-def test_carga_local_segun_la_gpu(monkeypatch, memoria, bf16, cuantiza_8b):
+@pytest.mark.parametrize("memoria,bf16,cuantiza_8b,cuantiza_14b", [
+    (15.6e9, False, True, True),     # T4: 8B y 14B en 4 bits, fp16
+    (23.0e9, True, False, True),     # L4: 8B en bf16, 14B en 4 bits
+    (42.5e9, True, False, False)])   # A100: todo en bf16
+def test_carga_local_segun_la_gpu(monkeypatch, memoria, bf16, cuantiza_8b, cuantiza_14b):
     """Con torch y transformers falsos: solo se comprueba qué se pide al cargar."""
     import sys
     from types import ModuleType
@@ -211,8 +213,9 @@ def test_carga_local_segun_la_gpu(monkeypatch, memoria, bf16, cuantiza_8b):
     monkeypatch.setitem(sys.modules, "transformers", tf)
     monkeypatch.setattr(R, "_locales", {})
     monkeypatch.setattr(R, "CARGA_LOCAL", {})
-    R.cargar_local("Qwen/Qwen3-8B"); R.cargar_local("Qwen/Qwen3-4B")
+    R.cargar_local("Qwen/Qwen3-8B"); R.cargar_local("Qwen/Qwen3-4B"); R.cargar_local("Qwen/Qwen3-14B")
     assert ("quantization_config" in cargas["Qwen/Qwen3-8B"]) is cuantiza_8b
+    assert ("quantization_config" in cargas["Qwen/Qwen3-14B"]) is cuantiza_14b
     assert "quantization_config" not in cargas["Qwen/Qwen3-4B"]
     assert cargas["Qwen/Qwen3-4B"]["torch_dtype"] == ("torch.bfloat16" if bf16 else "torch.float16")
     assert R.CARGA_LOCAL["Qwen/Qwen3-8B"]["cuantizado_4bits"] is cuantiza_8b

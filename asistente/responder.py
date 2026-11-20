@@ -53,12 +53,13 @@ NO_ESTA = "No está en el SRD 5.2.1."
 AVISO_2014 = "Cambio respecto a 2014:"
 
 # Modelo local (opcional, GPU): se usa cuando el nombre empieza por «Qwen/», sin modo de razonamiento.
-# Sin cuantizar si cabe (bf16 si la GPU lo admite, si no fp16); en 4 bits los de CUANTIZADOS_4BITS
-# cuando la GPU tiene menos de MEMORIA_SIN_CUANTIZAR (T4: 15 GB). Lo usado queda en CARGA_LOCAL.
+# Sin cuantizar si cabe (bf16 si la GPU lo admite, si no fp16); en 4 bits si la GPU tiene menos
+# memoria de la que el modelo necesita en 16 bits (MEMORIA_16BITS). Lo usado queda en CARGA_LOCAL.
 MODELO_LOCAL = "Qwen/Qwen3-4B"
 MAX_TOKENS_LOCAL = 1024      # la T4 genera despacio; las respuestas son de pocas frases
-CUANTIZADOS_4BITS = {"Qwen/Qwen3-8B", "Qwen/Qwen3-14B"}   # en 16 bits no caben en una T4: 4 bits (NF4)
-MEMORIA_SIN_CUANTIZAR = 24e9   # bytes de GPU a partir de los que se cargan en 16 bits (L4, A100…)
+# Bytes de GPU que necesita cada modelo en 16 bits (pesos + margen para el contexto). Con menos, 4 bits (NF4).
+# T4 ≈ 15e9 (8B y 14B en 4 bits); L4 ≈ 23e9 (8B en 16 bits, 14B en 4 bits); A100 ≥ 40e9 (todo en 16 bits).
+MEMORIA_16BITS = {"Qwen/Qwen3-8B": 20e9, "Qwen/Qwen3-14B": 34e9}
 CARGA_LOCAL = {}
 GENERACION_LOCAL = {"do_sample": True, "temperature": 0.7, "top_p": 0.8, "top_k": 20}   # valores de Qwen sin razonamiento [PENDIENTE: confirmar en la ficha]
 
@@ -266,7 +267,7 @@ def cargar_local(modelo):
         gpu = torch.cuda.get_device_properties(0)
         dtype = torch.bfloat16 if torch.cuda.is_bf16_supported() else torch.float16
         extra = {}
-        cuantizado = modelo in CUANTIZADOS_4BITS and gpu.total_memory < MEMORIA_SIN_CUANTIZAR
+        cuantizado = gpu.total_memory < MEMORIA_16BITS.get(modelo, 0)
         if cuantizado:
             from transformers import BitsAndBytesConfig
             extra["quantization_config"] = BitsAndBytesConfig(load_in_4bit=True, bnb_4bit_quant_type="nf4",
