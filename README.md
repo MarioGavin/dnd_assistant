@@ -22,7 +22,7 @@ python -m asistente.evaluar --modelo claude-haiku-5-5 --reformular --contexto-am
 python -m asistente.evaluar --modelo claude-haiku-5-5 --reformular --repeticiones 3
 python -m asistente.evaluar --modelo claude-haiku-5-5 --tablas-padre --repeticiones 3 # opción medida (fallo 24)
 python -m asistente.evaluar --modelo Qwen/Qwen3-4B --repeticiones 1   # modelo local: necesita GPU, torch, transformers y accelerate
-python -m asistente.evaluar --modelo Qwen/Qwen3-8B --repeticiones 1   # en 4 bits: además, bitsandbytes
+python -m asistente.evaluar --modelo Qwen/Qwen3-8B --repeticiones 1   # en 16 bits si cabe en la GPU (medido en bf16 en una L4); si no, en 4 bits con bitsandbytes
 python -m asistente.evaluar --repuntuar                      # vuelve a puntuar lo guardado con el detector actual
 python -m asistente.evaluar --wilson                         # aciertos con intervalo de Wilson al 95 % (resultados/wilson.md)
 python -m asistente.evaluar --tabla                          # compara las ejecuciones de resultados/
@@ -47,7 +47,7 @@ En las fichas, el nombre, el correo y el ID del jugador se sustituyen por un seu
 | `corpus/` | Corpus generado (`fragmentos.jsonl`) y su versión en markdown |
 | `casos/` | Conjunto de prueba (`casos_prueba.json`) y consultas de contraste para la búsqueda (`consultas_contraste.json`) |
 | `resultados/` | Resultados de cada ejecución (`<modelo>-r<n>.json`) y `comparacion.md` |
-| `tests/` | Tests del corpus y de los casos |
+| `tests/` | Tests del corpus, la búsqueda, los casos, las fichas, `responder` y `evaluar` |
 
 Para regenerar el corpus, descargar en `srd/` `SP_SRD_CC_v5.2.1.pdf` y `SRD_CC_v5.1_ES.pdf` desde https://www.dndbeyond.com/srd y ejecutar `python -m asistente.corpus`.
 
