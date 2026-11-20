@@ -52,10 +52,14 @@ VERSION_PROMPT = "v2"    # v1: avance del 15 nov
 NO_ESTA = "No está en el SRD 5.2.1."
 AVISO_2014 = "Cambio respecto a 2014:"
 
-# Modelo local (opcional, GPU): se usa cuando el nombre empieza por «Qwen/». fp16 sin cuantizar
-# (4B ≈ 8 GB, cabe en una T4 de 16 GB) y sin modo de razonamiento, para que tarde poco.
+# Modelo local (opcional, GPU): se usa cuando el nombre empieza por «Qwen/», sin modo de razonamiento.
+# Sin cuantizar si cabe (bf16 si la GPU lo admite, si no fp16); en 4 bits los de CUANTIZADOS_4BITS
+# cuando la GPU tiene menos de MEMORIA_SIN_CUANTIZAR (T4: 15 GB). Lo usado queda en CARGA_LOCAL.
 MODELO_LOCAL = "Qwen/Qwen3-4B"
 MAX_TOKENS_LOCAL = 1024      # la T4 genera despacio; las respuestas son de pocas frases
+CUANTIZADOS_4BITS = {"Qwen/Qwen3-8B", "Qwen/Qwen3-14B"}   # en 16 bits no caben en una T4: 4 bits (NF4)
+MEMORIA_SIN_CUANTIZAR = 24e9   # bytes de GPU a partir de los que se cargan en 16 bits (L4, A100…)
+CARGA_LOCAL = {}
 GENERACION_LOCAL = {"do_sample": True, "temperature": 0.7, "top_p": 0.8, "top_k": 20}   # valores de Qwen sin razonamiento [PENDIENTE: confirmar en la ficha]
 
 # Precio en dólares por millón de tokens (entrada, salida), página oficial de precios de
@@ -259,7 +263,17 @@ def cargar_local(modelo):
         import torch
         from transformers import AutoModelForCausalLM, AutoTokenizer
         tok = AutoTokenizer.from_pretrained(modelo)
-        mod = AutoModelForCausalLM.from_pretrained(modelo, torch_dtype=torch.float16, device_map="auto")
+        gpu = torch.cuda.get_device_properties(0)
+        dtype = torch.bfloat16 if torch.cuda.is_bf16_supported() else torch.float16
+        extra = {}
+        cuantizado = modelo in CUANTIZADOS_4BITS and gpu.total_memory < MEMORIA_SIN_CUANTIZAR
+        if cuantizado:
+            from transformers import BitsAndBytesConfig
+            extra["quantization_config"] = BitsAndBytesConfig(load_in_4bit=True, bnb_4bit_quant_type="nf4",
+                                                              bnb_4bit_compute_dtype=dtype)
+        mod = AutoModelForCausalLM.from_pretrained(modelo, torch_dtype=dtype, device_map="auto", **extra)
+        CARGA_LOCAL[modelo] = {"gpu": gpu.name, "memoria_gb": round(gpu.total_memory / 1e9, 1),
+                               "dtype": str(dtype).replace("torch.", ""), "cuantizado_4bits": cuantizado}
         _locales[modelo] = (tok, mod)
     return _locales[modelo]
 

@@ -321,7 +321,7 @@ def evaluar_completo(args, casos):
         "tablas": not args.sin_tablas, "tablas_padre": args.tablas_padre,
         "contexto_amplio": R.AMPLIO if args.contexto_amplio else None,
         "casos": Path(args.casos).name,
-        "generacion_local": {**R.GENERACION_LOCAL, "max_new_tokens": R.MAX_TOKENS_LOCAL, "dtype": "float16",
+        "generacion_local": {**R.GENERACION_LOCAL, "max_new_tokens": R.MAX_TOKENS_LOCAL,
                              "razonamiento": False} if args.modelo.startswith("Qwen/") else None,
     }
     RESULTADOS.mkdir(exist_ok=True)
@@ -332,6 +332,8 @@ def evaluar_completo(args, casos):
                               args.reformular, args.enrutar, not args.sin_tablas, args.tablas_padre,
                               args.contexto_amplio)
         res = {**config, "repeticion": rep, "fecha": datetime.now().isoformat(timespec="seconds"), **resumir(filas)}
+        if args.modelo in R.CARGA_LOCAL:
+            res["carga_local"] = R.CARGA_LOCAL[args.modelo]          # GPU, dtype y si se cuantizó
         resumenes.append(res)
         nombre = RESULTADOS / f"{etiqueta}-r{rep}.json"
         with open(nombre, "w", encoding="utf-8") as fh:

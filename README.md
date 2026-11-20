@@ -22,6 +22,7 @@ python -m asistente.evaluar --modelo claude-haiku-5-5 --reformular --contexto-am
 python -m asistente.evaluar --modelo claude-haiku-5-5 --reformular --repeticiones 3
 python -m asistente.evaluar --modelo claude-haiku-5-5 --tablas-padre --repeticiones 3 # opción medida (fallo 24)
 python -m asistente.evaluar --modelo Qwen/Qwen3-4B --repeticiones 1   # modelo local: necesita GPU, torch, transformers y accelerate
+python -m asistente.evaluar --modelo Qwen/Qwen3-8B --repeticiones 1   # en 4 bits: además, bitsandbytes
 python -m asistente.evaluar --repuntuar                      # vuelve a puntuar lo guardado con el detector actual
 python -m asistente.evaluar --tabla                          # compara las ejecuciones de resultados/
 ```
